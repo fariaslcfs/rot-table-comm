@@ -34,8 +34,8 @@ A abordagem substitui o sistema original em C (com dependência de compilação,
 |----------|--------|-----------|
 | 20 | Emergency Stop | 4 = stop imediato / 0 = reset |
 | 22 | Enable Tilt | 0 off / 1 on / 2 reverse |
-| 24 | Enable Azimuth | 0 off / 1 on |
-| 26 | Tilt Command | 0 stop / 1 forward / 2 reverse |
+| 24 | Enable Azimuth | 0 off / 1 on / 2 reverse |
+| 26 | Tilt Command | 0 stop / 1 forward / 2 reverse / 4 mode pos |
 | 28 | Azimuth Command | 0 stop / 1 forward / 2 reverse / 4 mode pos |
 
 ---
@@ -55,10 +55,10 @@ A abordagem substitui o sistema original em C (com dependência de compilação,
 
 ### Velocidade (jog / controle contínuo)
 
-| Endereço | Função |
-|----------|--------|
-| 46 | Tilt velocity (32-bit) |
-| 56 | Azimuth velocity (32-bit) |
+| Endereço | Função |             Observação               |
+|----------|--------|--------------------------------------|
+| 46 e 47| Tilt velocity (16-bit) | Somente 46 usado |
+| 56 e 56| Azimuth velocity (16-bit) | Somente 56 usado |
 
 ---
 
@@ -123,7 +123,8 @@ Para garantir operação correta do controlador da mesa:
 
 ---
 
-## Formato de registradores 32 bits
+## Formato de registradores 32 bits (2 registradores de 16 bits)
+* O modbus é um protocolo com palavras de 16 bits.
 
 Alguns registradores exigem divisão em dois registradores de 16 bits.
 

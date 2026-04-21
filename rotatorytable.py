@@ -2,15 +2,21 @@ from pymodbus.client import ModbusTcpClient
 import time
 
 
+SERVER_PROD = "192.168.1.1"      # Mesa real Infax
+MODBUS_PORT = 502                # Porta padrão Modbus TCP  
+SERVER_TEST = "127.0.0.1"        # Simulador local. Lembre-se de iniciar o simulador antes de executar este script.
+MODBUS_PORT_TEST = 5020          # Evita conflito com porta 502 (well-known)
+
+
 class RotTableWrapper:
     """
-    Wrapper estável para controle da mesa inercial IEAv
+    Wrapper estável para controle da mesa inercial IEAv+
     via Modbus TCP (pymodbus 3.x+ / 4.x compatível).
 
     Foco: simplicidade de uso em laboratório.
     """
 
-    def __init__(self, host="127.0.0.1", port=5020):
+    def __init__(self, host=SERVER_TEST, port=MODBUS_PORT_TEST):
         self.host = host
         self.port = port
         self.client = ModbusTcpClient(host=host, port=port)
@@ -34,7 +40,7 @@ class RotTableWrapper:
             self.client.connect()
 
     # =====================================================
-    # CORE MODBUS
+    # CORE MODBUS or HELPERS
     # =====================================================
 
     def write(self, addr, value):
@@ -88,7 +94,7 @@ class RotTableWrapper:
     # VELOCIDADE (JOG)
     # =====================================================
 
-    def azimuth_velocity(self, value: float):
+    def jogazi(self, value: float):
 
         self.write(50, 10000)
         self.write(52, 10000)
@@ -111,7 +117,7 @@ class RotTableWrapper:
         else:
             self.write(28, 0)
 
-    def tilt_velocity(self, value: float):
+    def jogtilt(self, value: float):
 
         self.write(22, 2)
         time.sleep(0.02)
@@ -140,20 +146,15 @@ class RotTableWrapper:
 
         time.sleep(0.02)
 
-    def jog(self, axis: str, velocity: float):
-        if axis.lower() == "azimuth":
-            self.azimuth_velocity(velocity)
-        elif axis.lower() == "tilt":
-            self.tilt_velocity(velocity)
-        elif axis.lower() == "both":
-            self.azimuth_velocity(velocity)
-            self.tilt_velocity(velocity)
+    def jog(self, velocity: float):
+        self.jogazi(velocity)
+        self.jogtilt(velocity)
 
     # =====================================================
     # POSIÇÃO
     # =====================================================
 
-    def azimuth_position(self, angle: float):
+    def posazi(self, angle: float):
 
         pos = self.normalize(angle)
 
@@ -172,7 +173,7 @@ class RotTableWrapper:
 
         self.write(28, 4)
 
-    def tilt_position(self, angle: float):
+    def postilt(self, angle: float):
 
         pos = self.normalize(angle)
 
@@ -191,27 +192,41 @@ class RotTableWrapper:
 
         self.write(26, 4)
 
-    def pos(self, axis: str, angle: float):
-        if axis.lower() == "azimuth":
-            self.azimuth_position(angle)
-        elif axis.lower() == "tilt":
-            self.tilt_position(angle)
-        elif axis.lower() == "both":
-            self.azimuth_position(angle)
-            self.tilt_position(angle)
+    def pos(self, angle: float):
+        self.posazi(angle)
+        self.postilt(angle)
 
     # =====================================================
     # LEITURA (FEEDBACK)
     # =====================================================
 
-    def get_azimuth(self):
+    def getposazi(self):
         r = self.read_input(0, 2)
         if r.isError():
             return None
         return ((r.registers[1] << 16) + r.registers[0]) / 1_000_000
 
-    def get_tilt(self):
+    def getpostilt(self):
         r = self.read_input(4, 2)
         if r.isError():
             return None
         return ((r.registers[1] << 16) + r.registers[0]) / 1_000_000
+    
+    def getpos(self):
+        return self.getposazi(), self.getpostilt()
+    
+    def getvelazi(self):
+        r = self.read_input(8, 2)
+        if r.isError():
+            return None
+        return ((r.registers[1] << 16) + r.registers[0]) / 100.0
+
+    def getveltilt(self):
+        r = self.read_input(12, 2)
+        if r.isError():
+            return None
+        return ((r.registers[1] << 16) + r.registers[0]) / 100.0
+    
+    def getvel(self):
+        return self.getvelazi(), self.getveltilt()
+    

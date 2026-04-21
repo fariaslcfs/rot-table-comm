@@ -1,4 +1,4 @@
-# RotTableComm — Guia Rápido (Cheat Sheet)
+# RotTableWrapper— Guia Rápido (Cheat Sheet)
 
 > Controle da mesa inercial IEAv (Azimuth + Tilt) via Modbus TCP  
 > Uso direto para testes e scripts simples
@@ -8,7 +8,11 @@
 # 1. INICIALIZAÇÃO
 
 ~~~
-RotTableComm(host="127.0.0.1", port=5020)
+Real
+ - RotTableWrapper(host="192.168.1.1", port=502)
+
+Com simulador
+ - RotTableWrapper(host="127.0.0.1", port=5020)
 ~~~
 
 Cria interface com a mesa ou simulador.
@@ -51,49 +55,57 @@ Para todos os movimentos imediatamente.
 # 4. POSIÇÃO (ABSOLUTA)
 
 ~~~
-pos("azimuth", angulo)
-pos("tilt", angulo)
-pos("both", angulo)
+posazi(angulo)
+postilt(angulo)
+pos(angulo)
 ~~~
 
 Exemplo:
-- pos("azimuth", 45) → move Azimuth para 45°
-- pos("tilt", 10) → move Tilt para 10°
+- posazi(45) → move Azimuth para 45°
+- postilt(10) → move Tilt para 10°
+- pos(22.4) → move ambos eixos para 22.4 °
 
 ---
 
 # 5. JOG (VELOCIDADE)
 
 ~~~
-jog("azimuth", velocidade)
-jog("tilt", velocidade)
-jog("both", velocidade)
+jogazi(velocidade)
+jogtilt(velocidade)
+jog(velocidade)
 ~~~
 
 Exemplo:
-- jog("azimuth", 20) → gira Azimuth positivo
-- jog("tilt", -15) → gira Tilt negativo
+- jogazi(20) → inicia o giro contínuo do eixo Azi com velocidade de  20 °/s (girando no sentido positivo)
+- jogtilt(-15) → inicia o giro contínuo do eixo Tilt com velocidade de 15 °/s (girando no sentido negativo)
+- jog(45.5) → inicia o giro contínuo de ambos eixos com velocidade de 45.5 °/s (girando no sentido positivo)
 
 ---
 
 # 6. LEITURA (FEEDBACK)
 
 ~~~
-get_azimuth()
+getposazi()
 ~~~
 Retorna posição atual do Azimuth (graus)
 
 ~~~
-get_tilt()
+getpostilt()
 ~~~
 Retorna posição atual do Tilt (graus)
+
+~~~
+getpos()
+~~~
+Retorna posição atual de ambos eixos AZI e Tilt (graus)
+
 
 ---
 
 # 7. REGRAS IMPORTANTES
 
 - Valores de posição: graus
-- Velocidade: escala interna ×100
+- Velocidade: graus/s
 - Controle usa Modbus TCP
 - Sempre chamar `enable()` antes de mover
 - Usar `stop()` para interromper movimento
@@ -103,13 +115,18 @@ Retorna posição atual do Tilt (graus)
 # 8. EXEMPLO MÍNIMO
 
 ~~~
-rot = RotTableComm("127.0.0.1", 5020)
+rot = RotTableWrapper("127.0.0.1", 5020)
 
 rot.connect()
 rot.enable()
 
-rot.pos("azimuth", 30)
-rot.jog("tilt", 10)
+rot.posazi(30)
+rot.postilt(10)
+rot.pos(90.3)
+
+rot.jogazi(30)
+rot.jogtilt(22)
+rot.jog(44)
 
 rot.stop()
 rot.close()

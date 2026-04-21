@@ -21,3 +21,7 @@
 | 74 | APosAzi | Aceleração Azimute |
 | 62 | VPosTilt | Velocidade pos. Tilt |
 | 64 | APosTilt | Aceleração Tilt |
+| 80 | MaxVelTitl | Tilt max velocity |
+| 82 | MaxAccTilt | Tilt max acceleration |
+| 90 | MaxVelAzi | Azimuth max velocity |
+| 92 | MaxAccAzi | Azimuth max acceleration |

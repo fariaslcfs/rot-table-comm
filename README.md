@@ -1,4 +1,4 @@
-# RotTableComm — Classe de Controle da Mesa Inercial (Python 3.12+)
+# RotTableWrapper (RotTableComm refatorada) — Classe de Controle da Mesa Inercial (Python 3.12+)
 
 Autor: Roney D. Silva e equipe EFO-S  
 
@@ -6,7 +6,7 @@ Autor: Roney D. Silva e equipe EFO-S
 
 ## 1. Visão Geral
 
-A classe `RotTableComm` fornece uma interface de alto nível para controle de uma mesa inercial de dois eixos (**Azimuth** e **Tilt**) via protocolo **Modbus TCP**.
+A classe `RotTableWrapper` fornece uma interface de alto nível para controle de uma mesa inercial de dois eixos (**Azimuth** e **Tilt**) via protocolo **Modbus TCP**.
 
 Ela encapsula:
 
@@ -85,8 +85,8 @@ normalize(angle):
 
 ### Holding Registers (Controle)
 
-| Addr | Função |
-|------|--------|
+| Addr | Função | Observação |             
+|------|--------|------------|
 | 22   | Enable Tilt |
 | 24   | Enable Azimuth |
 | 26   | CMD Tilt |
@@ -95,233 +95,251 @@ normalize(angle):
 | 42   | Max Acc Tilt |
 | 50   | Acc Azimuth |
 | 52   | Max Acc Azimuth |
-| 46-47| Vel Tilt |
-| 56-57| Vel Azimuth |
-| 60-61| Target Tilt |
-| 70-71| Target Azimuth |
-
+| 46-47| Vel Tilt |         * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
+| 56-57| Vel Azimuth |      * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
+| 60-61| Target Tilt |      * Para o valor do target (posição angular de azimute), 2 registradores de 16 bits são usados | 
+| 70-71| Target Azimuth |   * Para o valor do target (posição angular de inclinação), 2 registradores de 16 bits são usados | 
+| 80   | MaxVelTitl |       * Tilt max velocity |
+| 82   | MaxAccTilt |       * Tilt max acceleration |
+| 90   | MaxVelAzi |        * Azimuth max velocity |
+| 92   | MaxAccAzi |        * Azimuth max acceleration |
 ---
 
 ## 5. Classe Refatorada
 
 ~~~
+from pymodbus.client import ModbusTcpClient
 import time
-from pyModbusTCP.client import ModbusClient
 
 
-class RotTableComm:
+SERVER_PROD = "192.168.1.1"      # Mesa real Infax
+MODBUS_PORT = 502                # Porta padrão Modbus TCP  
+SERVER_TEST = "127.0.0.1"        # Simulador local. Lembre-se de iniciar o simulador antes de executar este script.
+MODBUS_PORT_TEST = 5020          # Evita conflito com porta 502 (well-known)
+
+
+class RotTableWrapper:
     """
-    Interface de controle da mesa inercial (Azimuth + Tilt)
-    via Modbus TCP.
+    Wrapper estável para controle da mesa inercial IEAv+
+    via Modbus TCP (pymodbus 3.x+ / 4.x compatível).
+
+    Foco: simplicidade de uso em laboratório.
     """
 
-    def __init__(self, host="192.168.1.1", port=502):
+    def __init__(self, host=SERVER_TEST, port=MODBUS_PORT_TEST):
+        self.host = host
+        self.port = port
+        self.client = ModbusTcpClient(host=host, port=port)
 
-        self.client = ModbusClient(host=host, port=port)
-        self.max_acc = 10000
+        # limites básicos (engenharia)
         self.max_vel = 50000
+        self.max_acc = 10000
 
-        if not self.client.open():
-            raise ConnectionError("Falha ao conectar no controlador da mesa")
+    # =====================================================
+    # CONEXÃO
+    # =====================================================
 
+    def connect(self):
+        return self.client.connect()
+
+    def close(self):
         self.client.close()
 
-    # =========================
-    # UTIL
-    # =========================
+    def _ensure_connection(self):
+        if not self.client.connected:
+            self.client.connect()
 
-    def _write(self, addr, value):
-        if not self.client.is_open:
-            self.client.open()
-        self.client.write_single_register(addr, value)
-        self.client.close()
+    # =====================================================
+    # CORE MODBUS or HELPERS
+    # =====================================================
 
-    def _write_dword(self, addr, value):
+    def write(self, addr, value):
+        self._ensure_connection()
+        return self.client.write_register(address=addr, value=int(value))
+
+    def write_dword(self, addr, value):
+        """Escreve 32 bits em dois registradores 16 bits"""
+        value = int(value)
         low = value & 0xFFFF
         high = (value >> 16) & 0xFFFF
-        self._write(addr, low)
-        self._write(addr + 1, high)
+
+        self.write(addr, low)
+        self.write(addr + 1, high)
+
+    def read_input(self, addr, count=2):
+        self._ensure_connection()
+        return self.client.read_input_registers(address=addr, count=count)
+
+    # =====================================================
+    # UTILITÁRIO
+    # =====================================================
 
     def normalize(self, angle_deg: float) -> int:
         """
-        Converte graus para formato do controlador da mesa (×1000)
-        e normaliza para [0..360000)
+        Converte graus → formato controlador (×1000)
+        e normaliza 0–360°
         """
         v = int(angle_deg * 1000)
         if v < 0:
             v = 360000 - abs(v)
         return v
 
-    # =========================
-    # ENABLE
-    # =========================
+    # =====================================================
+    # ENABLE / STOP
+    # =====================================================
 
     def enable(self):
-        self._write(22, 1)
-        self._write(24, 1)
+        self.write(22, 1)
+        self.write(24, 1)
 
     def disable(self):
-        self._write(22, 0)
-        self._write(24, 0)
-
-    # =========================
-    # STOP
-    # =========================
+        self.write(22, 0)
+        self.write(24, 0)
 
     def stop(self):
-        self._write(26, 0)
-        self._write(28, 0)
+        self.write(26, 0)
+        self.write(28, 0)
 
-    # =========================
-    # VELOCIDADE AZIMUTH
-    # =========================
+    # =====================================================
+    # VELOCIDADE (JOG)
+    # =====================================================
 
-    def set_azimuth_velocity(self, value: float):
+    def jogazi(self, value: float):
 
-        self._write(50, 10000)
-        self._write(52, 10000)
-        self._write(24, 1)
-        self._write(22, 1)
-
-        v = value * 100.0
-
-        if v < 0:
-            self._write_dword(56, int(abs(v)))
-            self._write(28, 2)
-        elif v > 0:
-            self._write_dword(56, int(v))
-            self._write(28, 1)
-        else:
-            self._write(28, 0)
-
-    # =========================
-    # VELOCIDADE TILT
-    # =========================
-
-    def set_tilt_velocity(self, value: float):
-
-        self._write(22, 2)
-        time.sleep(0.02)
-
-        self._write(26, 0)
-        time.sleep(0.02)
-
-        self._write_dword(60, 0)  # reservado para compatibilidade
-
-        self._write(40, 10000)
-        self._write(42, 10000)
+        self.write(50, 10000)
+        self.write(52, 10000)
+        self.write(24, 1)
+        self.write(22, 1)
 
         v = value * 100.0
 
+        if v > self.max_vel:
+            v = self.max_vel
+        if v < -self.max_vel:
+            v = -self.max_vel
+
         if v < 0:
-            self._write_dword(46, int(abs(v)))
-            self._write(26, 2)
+            self.write_dword(56, abs(int(v)))
+            self.write(28, 2)
         elif v > 0:
-            self._write_dword(46, int(v))
-            self._write(26, 1)
+            self.write_dword(56, int(v))
+            self.write(28, 1)
         else:
-            self._write(26, 0)
+            self.write(28, 0)
 
+    def jogtilt(self, value: float):
+
+        self.write(22, 2)
         time.sleep(0.02)
 
-    # =========================
-    # POSIÇÃO AZIMUTH
-    # =========================
-
-    def set_azimuth_position(self, angle_deg: float):
-
-        pos = self.normalize(angle_deg)
-
-        self._write(24, 2)
+        self.write(26, 0)
         time.sleep(0.02)
 
-        self._write(28, 0)
-        time.sleep(0.02)
+        self.write(40, 10000)
+        self.write(42, 10000)
 
-        self._write_dword(70, pos)
+        v = value * 100.0
 
-        self._write(50, 10000)
-        self._write(52, 10000)
+        if v > self.max_vel:
+            v = self.max_vel
+        if v < -self.max_vel:
+            v = -self.max_vel
 
-        time.sleep(0.02)
-
-        self._write(28, 4)
-
-    # =========================
-    # POSIÇÃO TILT
-    # =========================
-
-    def set_tilt_position(self, angle_deg: float):
-
-        pos = self.normalize(angle_deg)
-
-        self._write(22, 2)
-        time.sleep(0.02)
-
-        self._write(26, 0)
-        time.sleep(0.02)
-
-        self._write_dword(60, pos)
-
-        self._write(40, 10000)
-        self._write(42, 10000)
+        if v < 0:
+            self.write_dword(46, abs(int(v)))
+            self.write(26, 2)
+        elif v > 0:
+            self.write_dword(46, int(v))
+            self.write(26, 1)
+        else:
+            self.write(26, 0)
 
         time.sleep(0.02)
-
-        self._write(26, 4)
-
-    # =========================
-    # JOG
-    # =========================
 
     def jog(self, axis: str, velocity: float):
+        self.jogazi(velocity)
+        self.jogtilt(velocity)
 
-        if axis == "azimuth":
-            self.set_azimuth_velocity(velocity)
+    # =====================================================
+    # POSIÇÃO
+    # =====================================================
 
-        elif axis == "tilt":
-            self.set_tilt_velocity(velocity)
+    def posazi(self, angle: float):
 
-        elif axis == "both":
-            self.set_azimuth_velocity(velocity)
-            self.set_tilt_velocity(velocity)
+        pos = self.normalize(angle)
 
-    # =========================
-    # POSIÇÃO GENÉRICA
-    # =========================
+        self.write(24, 2)
+        time.sleep(0.02)
+
+        self.write(28, 0)
+        time.sleep(0.02)
+
+        self.write_dword(70, pos)
+
+        self.write(50, 10000)
+        self.write(52, 10000)
+
+        time.sleep(0.02)
+
+        self.write(28, 4)
+
+    def postilt(self, angle: float):
+
+        pos = self.normalize(angle)
+
+        self.write(22, 2)
+        time.sleep(0.02)
+
+        self.write(26, 0)
+        time.sleep(0.02)
+
+        self.write_dword(60, pos)
+
+        self.write(40, 10000)
+        self.write(42, 10000)
+
+        time.sleep(0.02)
+
+        self.write(26, 4)
 
     def pos(self, axis: str, angle: float):
+        self.posazi(angle)
+        self.postilt(angle)
 
-        if axis == "azimuth":
-            self.set_azimuth_position(angle)
+    # =====================================================
+    # LEITURA (FEEDBACK)
+    # =====================================================
 
-        elif axis == "tilt":
-            self.set_tilt_position(angle)
+    def getposazi(self):
+        r = self.read_input(0, 2)
+        if r.isError():
+            return None
+        return ((r.registers[1] << 16) + r.registers[0]) / 1_000_000
 
-        elif axis == "both":
-            self.set_azimuth_position(angle)
-            self.set_tilt_position(angle)
-~~~
+    def getpostilt(self):
+        r = self.read_input(4, 2)
+        if r.isError():
+            return None
+        return ((r.registers[1] << 16) + r.registers[0]) / 1_000_000
+    
+    def getpos(self):
+        return self.getposazi(), self.getpostilt()
+    
+    def getvelazi(self):
+        r = self.read_input(8, 2)
+        if r.isError():
+            return None
+        return ((r.registers[1] << 16) + r.registers[0]) / 100.0
 
----
-
-## 6. Exemplo de Uso
-
-~~~
-from rot_table_comm import RotTableComm
-
-rt = RotTableComm()
-
-rt.enable()
-
-rt.pos("azimuth", 45)
-rt.pos("tilt", 30)
-
-rt.jog("azimuth", 10)
-rt.jog("tilt", -5)
-
-rt.stop()
-rt.disable()
+    def getveltilt(self):
+        r = self.read_input(12, 2)
+        if r.isError():
+            return None
+        return ((r.registers[1] << 16) + r.registers[0]) / 100.0
+    
+    def getvel(self):
+        return self.getvelazi(), self.getveltilt()
+    
 ~~~
 
 ---
@@ -351,9 +369,7 @@ O controlador da mesa NÃO aceita diretamente valores fora da escala:
 
 ## 9. Extensões Futuras
 
-- Cache de estado local (posição atual)
 - Retry automático Modbus
-- Streaming de telemetria
 - Execução de scripts de movimento
 
 # 👥 Equipe

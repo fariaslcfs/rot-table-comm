@@ -22,7 +22,7 @@ from time import sleep
 SERVER_PROD = "192.168.1.1"      # Mesa real Infax
 MODBUS_PORT = 502                # Porta padrão Modbus TCP
 
-SERVER_TEST = "127.0.0.1"        # Simulador local
+SERVER_TEST = "127.0.0.1"        # Simulador local. Lembre-se de iniciar o simulador antes de executar este script.
 MODBUS_PORT_TEST = 5020          # Evita conflito com porta 502 (well-known)
 
 # =========================================================
@@ -57,12 +57,18 @@ sleep(0.2)
 print("Teste de posicionamento (Azimuth + Tilt)...")
 
 rt.pos("azimuth", 45)
-sleep(2)
+sleep(2) 
+# Aguarda o movimento ser concluído (ajuste conforme necessário)
+# Seria ideal implementar uma função de espera baseada no status do movimento, em vez de usar sleep fixo.
+# Exemplo: aguardar até que o movimento seja concluído verificando o status do eixo.
+# Enquanto isso, o sleep é utilizado aqui para simplificar. Então, deve-se, com base na velocidade de posicionamento, 
+# ajustar o tempo de espera para garantir que o movimento seja concluído antes de enviar o próximo comando.
+
 
 rt.pos("tilt", 30)
 sleep(2)
 
-rt.pos("azimuth", 0)
+rt.pos("azi", 0)
 rt.pos("tilt", 0)
 sleep(2)
 
@@ -72,7 +78,7 @@ sleep(2)
 
 print("Teste Jog Azimuth +...")
 
-rt.jog("azimuth", 20)
+rt.jog("azi", 20)
 sleep(3)
 
 rt.stop()
@@ -104,7 +110,7 @@ print("Retorno ao zero mecânico lógico...")
 
 sleep(5)
 
-rt.pos("azimuth", 0)
+rt.pos("azi", 0)
 sleep(3)
 rt.pos("tilt", 0)
 sleep(3)

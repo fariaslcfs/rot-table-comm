@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<!-- saved from url=(0023)http://127.0.0.1:8080/# -->
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Mesa Inercial 2 Eixos - Hardened</title>
+    
+    <link href="./Controle Mesa Inercial 2 Eixos - Hardened_files/bootstrap.min.css" rel="stylesheet">
+    <link href="./Controle Mesa Inercial 2 Eixos - Hardened_files/all.min.css" rel="stylesheet">
+    <script src="./Controle Mesa Inercial 2 Eixos - Hardened_files/bootstrap.bundle.min.js"></script>
+    <script src="./Controle Mesa Inercial 2 Eixos - Hardened_files/chart.js"></script>
+    <script src="./Controle Mesa Inercial 2 Eixos - Hardened_files/showdown.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --bg-body: #f4f6f8;
+            --bg-navbar: #ffffff;
+            --bg-sidebar: #e9ecef;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-chart: #ffffff;
+            --text-main: #212529;
+            --text-muted: #6d757d;
+            --border-color: #dee2e6;
+            --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.05);
+            --radius: 8px;
+}
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+        }
+
+        .navbar {
+            background-color: var(--bg-navbar);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .sidebar {
+            background-color: var(--bg-sidebar);
+            height: calc(100vh - 56px);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            color: #495057;
+            padding: 10px 16px;
+            cursor: pointer;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--hover-color);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+
+        .form-control {
+            background-color: var(--bg-input) !important;
+            color: var(--text-main) !important;
+            border-color: var(--border-color);
+        }
+
+        .form-control:focus {
+            background-color: #ffffff !important;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .value-display {
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: #0d6efd;
+        }
+
+        .unit {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .section {
+            display: none !important;
+            padding: 20px;
+            min-height: 500px;
+        }
+
+        .section.active {
+            display: block !important;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            # background-color: #28a745;
+            background-color: #EBE8E8;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+            background: var(--bg-chart) !important;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .blink-circle {
+            width: 18px;
+            height: 18px;
+            background-color: #dc3545;
+            border-radius: 50%;
+            margin: 0 auto;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        #script-text {
+            background-color: #f8f9fa;
+            color: #212529;
+            caret-color: #0d6efd;
+            border-color: #ced4da;
+            font-family: ui-monospace, monospace;
+        }
+
+        /* ==================== SLIDER ==================== */
+        #chart-window-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            height: 8px;
+        }
+
+        /* Trilha (track) */
+        #chart-window-slider::-webkit-slider-runnable-track {
+            height: 8px;
+            background: #dddddd;        /* ← Mude aqui a cor desejada */
+            #background: #0b5ed7; 
+            border-radius: 4px;
+        }
+
+        #chart-window-slider::-moz-range-track {
+            height: 8px;
+            background: #0b5ed7;        /* ← Mesma cor aqui */
+            border-radius: 4px;
+        }
+
+        /* Bolinha (thumb) - já está azul */
+        #chart-window-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -6px;
+            width: 18px;
+            height: 18px;
+            background: #0d6efd;
+            border-radius: 50%;
+            border: 2px solid #333;
+            cursor: pointer;
+        }
+
+        #chart-window-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #0d6efd;
+            border-radius: 50%;
+            border: 2px solid #333;
+            cursor: pointer;
+        }
+        /* ======================================================== */
+
+        #readme-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            min-height: 600px;
+        }
+
+        #readme-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        #readme-content th, #readme-content td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: left;
+        }
+
+        #readme-content th {
+            background-color: #f8f9fa;
+        }
+
+        #readme-content pre {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        /* ==================== CUSTOMIZAÇÃO DOS BLOCOS ==================== */
+        .stack-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: stretch;
+        }
+        .stack-card {
+            #width: calc(33.333% - 8px);
+            flex: 1 1 260px;   /* ✅ comportamento responsivo correto */
+            min-width: 200px;
+            # background-color: #EFF0F0;
+            background-color: #EBE8E8; /* mais escuro que branco */
+            border: 1px solid #cfd6dd;
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;                
+        }
+        .link-arquivo {
+            color: #198754;
+            text-decoration: underline;
+            transition: all 0.2s ease;
+        }
+        .link-arquivo:hover {
+            color: #146c43;
+            text-decoration: none;
+        }
+        .link-arquivo:active {
+            transform: scale(0.98);
+        }
+        .link-arquivo {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="http://127.0.0.1:8080/#"><i class="fas fa-table"></i> MESA INFAX 2 EIXOS</a>
+            <div class="mt-1 d-flex flex-wrap gap-2 gap-md-2">
+                <span class="me-3">
+                    <span class="status-dot me-1" style="background-color: rgb(40, 167, 69);"></span>
+                    <span id="conn-status"><span class="text-success">Conectado</span></span>
+                    <span> • 192.168.1.1:502</span>
+                </span>
+                <button onclick="pararEixos(&#39;ambos&#39;)" class="btn btn-sm btn-danger me-2 fw-bold" title="Envia valor 0.0 para a velocidade dos eixos">
+                    <i class="fas fa-stop"></i> PARAR EIXOS
+                </button>
+                <button onclick="sendEmergencia()" class="btn btn-sm btn-warning me-2 fw-bold" title="Retira a alimentação do drive dos eixos">
+                    <i class="fas fa-exclamation-triangle"></i> EMERGÊNCIA
+                </button>
+                
+                <button onclick="sendReset()" class="btn btn-sm btn-secondary me-2 fw-bold" title="Restabelece alimentação no drive dos eixos">
+                    <i class="fas fa-redo"></i> RESET
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- SIDEBAR -->
+            <div class="col-md-2 sidebar pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a href="http://127.0.0.1:8080/#" onclick="showSection(&#39;monitor&#39;)" class="nav-link"><i class="fas fa-tachometer-alt"></i> Monitoramento</a></li>
+                    <li class="nav-item"><a href="http://127.0.0.1:8080/#" onclick="showSection(&#39;posicionamento&#39;)" class="nav-link"><i class="fas fa-crosshairs"></i> Posicionamento</a></li>
+                    <li class="nav-item"><a href="http://127.0.0.1:8080/#" onclick="showSection(&#39;jog&#39;)" class="nav-link"><i class="fas fa-arrows-alt"></i> Jog Manual</a></li>
+                    <li class="nav-item"><a href="http://127.0.0.1:8080/#" onclick="showSection(&#39;jogauto&#39;)" class="nav-link"><i class="fas fa-chart-line"></i> Jog Automatizado</a></li>
+                    <li class="nav-item"><a href="http://127.0.0.1:8080/#" onclick="showSection(&#39;script&#39;)" class="nav-link active"><i class="fas fa-file-code"></i> Script</a></li>
+                    <li class="nav-item"><a href="http://127.0.0.1:8080/#" onclick="showSection(&#39;config&#39;)" class="nav-link"><i class="fas fa-cog"></i> Configurações / Console</a></li>
+                    <li class="nav-item"><a href="http://127.0.0.1:8080/#" onclick="showSection(&#39;readme&#39;)" class="nav-link"><i class="fas fa-book"></i> Ajuda</a></li>
+                </ul>
+                <hr class="mx-2">
+                <div class="px-2">
+                    <button onclick="startGravacao()" title="Inicia gravação dos valores lidos da mesa em 4 colunas [POS_AZI  VEL_AZI  POS_TILT  VEL_TILT] no arquivo dadosMesa.txt no diretório do projeto" class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-record-vinyl"></i> 
+                            Iniciar Gravação
+                        </button>
+                    <button onclick="stopGravacao()" title="Para a gravação dos dados lidos da mesa" class="btn btn-outline-danger w-100 mb-2">
+                        <i class="fas fa-stop-circle"></i> 
+                            Parar Gravação
+                        </button>
+                    <div id="gravacao-indicator" class="text-center mt-3 d-none">
+                        <div class="blink-circle"></div>
+                        <div class="text-danger fw-bold mt-2">GRAVANDO...</div>
+                    </div>
+                    <hr class="mt-4">
+                    <div class="mt-3">
+                        <a href="http://127.0.0.1:8080/dadosMesa.txt" target="_blank" class="link-arquivo fs-6 fw-bold">
+                            📄 Conteúdo da Gravação
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTEÚDO PRINCIPAL -->
+            <div class="col-md-10 p-4">
+                <!-- MONITORAMENTO -->
+                <div id="monitor" class="section">
+                    <h3 class="mb-3"><i class="fas fa-tachometer-alt"></i> Monitoramento em Tempo Real</h3>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3"><div class="card h-100 text-center"><div class="card-body py-1"><h6 style="color: #ff6b6b;" mb-1"=""><i class="fas fa-compass"></i> Pos Azimute</h6><div id="pos-azi" class="value-display" style="color: #ff6b6b;">0.0158</div><span class="unit">°</span></div></div></div>
+                        <div class="col-6 col-md-3"><div class="card h-100 text-center"><div class="card-body py-1"><h6 style="color: #00c897;" mb-1"=""><i class="fas fa-compass"></i> Pos Tilt</h6><div id="pos-tilt" class="value-display" style="color: #00c897;">359.9931</div><span class="unit">°</span></div></div></div>
+                        <div class="col-6 col-md-3"><div class="card h-100 text-center"><div class="card-body py-1"><h6 style="color: #ff6b6b;" mb-1"=""><i class="fas fa-tachometer-alt"></i> Vel Azimute</h6><div id="vel-azi" class="value-display" style="color: #ff6b6b;">0.1717</div><span class="unit">°/s</span></div></div></div>
+                        <div class="col-6 col-md-3"><div class="card h-100 text-center"><div class="card-body py-1"><h6 style="color: #00c897;" mb-1"=""><i class="fas fa-tachometer-alt"></i> Vel Tilt</h6><div id="vel-tilt" class="value-display" style="color: #00c897;">0.0000</div><span class="unit">°/s</span></div></div></div>
+                    </div>
+                    <div class="row g-3 mb-2">
+                        <div class="col-md-6"><h4 class="mb-2 text-center">Posições</h4><div class="chart-container"><canvas id="chartAzi" width="456" height="174" style="display: block; box-sizing: border-box; height: 193.8px; width: 507.4px;"></canvas></div></div>
+                        <div class="col-md-6"><h4 class="mb-2 text-center">Velocidades</h4><div class="chart-container"><canvas id="chartTilt" width="456" height="174" style="display: block; box-sizing: border-box; height: 193.8px; width: 507.4px;"></canvas></div></div>
+                    </div>
+                    <div class="stack-container">
+                        <!-- BLOCO 1: Janela de tempo -->
+                        <div class="stack-card d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-auto">
+                                <label class="form-label fw-bold text-primary mb-0">Janela de tempo (s)</label>
+                                <span id="window-value" class="fw-bold text-primary fs-5">10</span>
+                            </div>
+                            <div class="mt-auto">
+                                <input type="range" id="chart-window-slider" class="form-range" min="5" max="60" value="10" step="1">
+                            </div>
+                        </div>
+                        <!-- BLOCO 2: Filtro de Estabilidade -->
+                        <div class="stack-card d-flex flex-column">
+                            <div class="form-check form-switch mb-auto">
+                                <input class="form-check-input" type="checkbox" id="filter-enable" checked="">
+                                <label class="form-check-label fw-bold text-primary">
+                                    Filtro de Estabilidade (Deadband)
+                                </label>
+                            </div>
+                            <!-- <small class="text-muted d-block mb-2">Ignora pequenas variações para uma leitura mais estável</small> -->
+                            <div class="row mt-auto">
+                                <div class="col-6">
+                                    <label class="form-label mb-0">Posição (°)</label>
+                                    <input type="number" id="pos-deadband" class="form-control" step="0.05" value="0.2">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label mb-0">Velocidade (°/s)</label>
+                                    <input type="number" id="vel-deadband" class="form-control" step="0.05" value="0.1">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- BLOCO 3: Intervalo de atualização -->
+                        <div class="stack-card d-flex flex-column">
+                            <label class="form-label fw-bold text-primary mb-auto">
+                                Intervalo de atualização (ms)
+                            </label>
+                            <div class="d-flex gap-2 mt-auto">
+                                <input type="number" id="update-interval-input" class="form-control border-info" value="100" min="200" max="10000" step="10">
+                                <button onclick="alterarIntervalo()" class="btn btn-info fw-bold">
+                                    Alterar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 d-flex flex-wrap align-items-center gap-3">
+                        <button onclick="sendCommand(&#39;hab_jog&#39;)" class="btn btn-primary fw-bold" title="Habilita os botões localizados sobre o painel lateral de proteção da eletrônica da mesa para comandar os eixos com velocidade constante de 30.0 °/s.">
+                            <i class="fas fa-play-circle"></i> 
+                                Habilitar botões na mesa
+                        </button>
+                        <button onclick="sendCommand(&#39;des_jog&#39;)" class="btn btn-secondary fw-bold" title="Desabilita os botões externos de comando dos eixos">
+                            <i class="fas fa-ban"></i>
+                                 Desabilitar botões na mesa
+                        </button>
+                        <div class="d-inline-flex align-items-center ms-auto">
+                            <span class="fw-semibold">Ciclos executados:</span>
+                            <span id="mark-counter-main" class="ms-2 fw-bold text-dark"> 2/2</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- POSICIONAMENTO -->
+                <div id="posicionamento" class="section">
+                    <h3><i class="fas fa-crosshairs"></i> Posicionamento Absoluto</h3>
+                    <div class="row mt-4 g-4">
+                        <div class="col-md-6">
+                            <div class="card border-info h-100">
+                                <div class="card-header bg-info text-dark fw-bold">Eixo Azimute</div>
+                                <div class="card-body bg-light">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-info"><i class="fas fa-compass me-2"></i> Posição Azimute (°)</label>
+                                        <input type="number" id="pos-azi-input" class="form-control form-control-lg bg-white border-info" step="0.01" value="0">
+                                    </div>
+                                    <div class="d-flex gap-3 justify-content-center">
+                                        <button onclick="iniciarPosicionamentoEixo(&#39;azi&#39;)" class="btn btn-info fw-bold" style="width: 30%;">
+                                        <i class="fas fa-play"></i> Posicionar  
+                                    </button></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-warning h-100">
+                                <div class="card-header bg-warning text-dark fw-bold">Eixo Tilt</div>
+                                <div class="card-body bg-light">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-warning"><i class="fas fa-arrows-alt-v me-2"></i> Posição Tilt (°)</label>
+                                        <input type="number" id="pos-tilt-input" class="form-control form-control-lg bg-white border-warning" step="0.01" value="0">
+                                    </div>
+                                    <div class="d-flex gap-3 justify-content-center">
+                                        <button onclick="iniciarPosicionamentoEixo(&#39;tilt&#39;)" class="btn btn-warning fw-bold" style="width: 30%;">
+                                        <i class="fas fa-play"></i> Posicionar  
+                                    </button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="iniciarPosicionamentoEixo(&#39;ambos&#39;)" class="btn btn-primary btn-lg fw-bold"><i class="fas fa-play"></i> Posicionar Eixos</button>
+                    </div>
+                </div>
+
+                <!-- JOG MANUAL - CONTROLE INDIVIDUAL -->
+                <div id="jog" class="section">
+                    <h3><i class="fas fa-arrows-alt"></i> Jog Manual (Controle Individual)</h3>
+                    <!-- <p class="text-muted mb-4">Defina a velocidade de cada eixo independentemente. Use 0 para parar o eixo.</p> -->
+                    
+                    <div class="row mt-4 g-4">   <!-- ← Aqui está o ajuste principal (mt-4) -->
+                        <!-- AZIMUTE -->
+                        <div class="col-md-6">
+                            <div class="card border-info h-100">
+                                <div class="card-header bg-info text-dark fw-bold">
+                                    <i class="fas fa-compass"></i> Azimute
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-info">Velocidade (°/s)</label>
+                                        <input type="number" id="jog-azi" class="form-control form-control-lg" step="0.1" value="0" min="-500" max="500">
+                                    </div>
+                                    <div class="d-flex gap-3 justify-content-center">
+                                        <button onclick="iniciarJogEixo(&#39;azi&#39;)" class="btn btn-info fw-bold" style="width: 30%;">
+                                            <i class="fas fa-play"></i> Iniciar
+                                        </button>
+                                        <button onclick="pararEixos(&#39;azi&#39;)" class="btn btn-danger fw-bold" style="width: 30%;">
+                                            <i class="fas fa-stop"></i> Parar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TILT -->
+                        <div class="col-md-6">
+                            <div class="card border-warning h-100">
+                                <div class="card-header bg-warning text-dark fw-bold">
+                                    <i class="fas fa-arrows-alt-v"></i> Tilt
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-warning">Velocidade (°/s)</label>
+                                        <input type="number" id="jog-tilt" class="form-control form-control-lg" step="0.1" value="0" min="-200" max="200">
+                                    </div>
+                                    <div class="d-flex gap-3 justify-content-center">
+                                         <button onclick="iniciarJogEixo(&#39;tilt&#39;)" class="btn btn-warning fw-bold" style="width: 30%;">
+                                            <i class="fas fa-play"></i> Iniciar                                       
+                                        </button><button onclick="pararEixos(&#39;tilt&#39;)" class="btn btn-danger fw-bold" style="width: 30%;">
+                                            <i class="fas fa-stop"></i> Parar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-3 flex-wrap">
+                        <button onclick="iniciarJogEixo(&#39;ambos&#39;)" class="btn btn-primary btn-lg fw-bold"><i class="fas fa-play"></i> Iniciar Eixos</button>
+                        <button onclick="pararEixos(&#39;ambos&#39;)" class="btn btn-danger btn-lg fw-bold"><i class="fas fa-stop"></i> Parar Eixos</button>
+                        <!-- <button onclick="limparJog()" class="btn btn-secondary btn-lg fw-bold"><i class="fas fa-eraser"></i> Limpar
+                        </button> -->
+                    </div> 
+                </div>
+
+                <!-- JOG AUTOMATIZADO -->
+                <div id="jogauto" class="section">
+                    <h3><i class="fas fa-chart-line"></i> Jog Automatizado (Rampa de Velocidade)</h3>
+                    <div class="row mt-4 g-4">
+                        <div class="col-md-6">
+                            <div class="card border-info h-100">
+                                <div class="card-header bg-info text-dark fw-bold">Eixo Azimute</div>
+                                <div class="card-body bg-light">
+                                    <div class="mb-3"><label class="form-label fw-bold text-info">Incremento de Velocidade (°/s por passo)</label><input id="incvelazi" type="number" step="0.1" class="form-control bg-white border-info" value="10"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-info">Velocidade Inicial (°/s)</label><input id="veliniazi" type="number" step="0.1" class="form-control bg-white border-info" value="10"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-info">Velocidade Final (°/s)</label><input id="velendazi" type="number" step="0.1" class="form-control bg-white border-info" value="100"></div>
+                                    <div class="d-flex justify-content-center gap-3">
+                                        <button onclick="iniciarJogAutoEixo(&#39;azi&#39;)" class="btn btn-info fw-bold" style="width: 30%;">
+                                            <i class="fas fa-play"></i> Iniciar
+                                        </button>
+                                        <button onclick="pararEixos(&#39;azi&#39;)" class="btn btn-danger fw-bold" style="width: 30%;">
+                                            <i class="fas fa-stop"></i> Parar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-warning h-100">
+                                <div class="card-header bg-warning text-dark fw-bold">Eixo Tilt</div>
+                                <div class="card-body bg-light">
+                                    <div class="mb-3"><label class="form-label fw-bold text-warning">Incremento de Velocidade (°/s por passo)</label><input id="incveltilt" type="number" step="0.1" class="form-control bg-white border-warning" value="5"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-warning">Velocidade Inicial (°/s)</label><input id="velinitilt" type="number" step="0.1" class="form-control bg-white border-warning" value="5"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-warning">Velocidade Final (°/s)</label><input id="velendtilt" type="number" step="0.1" class="form-control bg-white border-warning" value="50"></div>
+                                    <div class="d-flex justify-content-center gap-3">
+                                        <button onclick="iniciarJogAutoEixo(&#39;tilt&#39;)" class="btn btn-warning fw-bold" style="width: 30%;">
+                                            <i class="fas fa-play"></i> Iniciar
+                                        </button>
+                                        <button onclick="pararEixos(&#39;tilt&#39;)" class="btn btn-danger fw-bold" style="width: 30%;">
+                                            <i class="fas fa-stop"></i> Parar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="form-label fw-bold">Tempo entre incrementos (s)</label>
+                        <input id="inctime" type="number" class="form-control bg-white" value="10" min="0.1" step="0.1">
+                    </div>
+                    <div class="mt-4 d-flex gap-3 flex-wrap">
+                        <button onclick="iniciarJogAuto()" class="btn btn-primary btn-lg fw-bold"><i class="fas fa-play me-2"></i> Iniciar Eixos</button>
+                        <button onclick="pararEixos(&#39;ambos&#39;)" class="btn btn-danger btn-lg fw-bold"><i class="fas fa-stop"></i> Parar Eixos
+                    </button>
+                    </div>
+                </div>
+
+                <!-- SCRIPT -->
+                <div id="script" class="section active">
+                    <h3><i class="fas fa-file-code"></i> Execução de Script
+                    </h3>
+                    <div class="row mt-4 g-4">
+                        <div class="col-12">
+                            <div class="card border-info h-100">
+                                <div class="card-header bg-info text-dark fw-bold">Editor de Script</div>
+                                <div class="card-body bg-light">
+                                    <textarea id="script-text" class="form-control font-monospace border-info" rows="15" placeholder="Comandos disponíveis (um por linha):
+AZPOS valor → posicionar Azimute (ex: AZPOS 45.0)
+AZVEL valor → velocidade contínua Azimute (ex: AZVEL 30.0)
+TLPOS valor → posicionar Tilt (ex: TLPOS -15.0)
+TLVEL valor → velocidade contínua Tilt (ex: TLVEL -20.0)
+WAIT segundos → esperar tempo (ex: WAIT 5)
+MARK → marcador de ciclo de execução (ex: MARK)"></textarea>
+                                    <div class="d-flex flex-wrap align-items-center gap-3 mt-3">
+                                        <button onclick="execScript()" class="btn btn-info btn-lg fw-bold">
+                                            <i class="fas fa-play"></i> Iniciar
+                                        </button>
+                                        <button onclick="calcTempoScript()" class="btn btn-outline-primary btn-lg fw-bold">
+                                            <i class="fas fa-clock"></i> Tempo total
+                                        </button>
+                                        <button onclick="salvarScript()" class="btn btn-outline-primary btn-lg fw-bold">
+                                            <i class="fas fa-save"></i> Salvar
+                                        </button>
+                                        <button onclick="document.getElementById(&#39;file-input-script&#39;).click()" class="btn btn-outline-primary btn-lg fw-bold">
+                                            <i class="fas fa-folder-open"></i> Carregar
+                                        </button>
+                                        <!-- CONTADOR -->
+                                        <div class="d-inline-flex align-items-center ms-auto">
+                                            <span class="fw-semibold">Ciclos executados:</span>
+                                            <span id="mark-counter" class="ms-2 fw-bold text-dark"> 2/2</span>
+                                        </div>
+                                        <input type="file" id="file-input-script" accept=".txt" style="display:none;" onchange="carregarScript(event)">
+                                    </div>
+                                    <div id="tempo-result" class="mt-3 alert alert-info d-none"></div>
+                                    <audio id="beep-audio">
+                                        <source src="https://www.soundjay.com/buttons/beep-07.mp3" type="audio/mpeg">
+                                    </audio>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONFIGURAÇÕES -->
+                <div id="config" class="section">
+                    <h3><i class="fas fa-cog"></i> Configurações e Console de Engenharia</h3>
+                    <div class="row mt-4 g-4">
+                        <div class="col-md-6">
+                            <div class="card border-info h-100">
+                                <div class="card-header bg-info text-dark fw-bold">Eixo Azimute</div>
+                                <div class="card-body bg-light">
+                                    <div class="mb-3"><label class="form-label fw-bold text-info">Velocidade de Posicionamento (°/s)</label><input id="velPosAzimute" type="number" step="0.01" class="form-control bg-white border-info" value="30"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-info">Aceleração de Posicionamento (°/s²)</label><input id="accPosAzimute" type="number" step="0.01" class="form-control bg-white border-info" value="100"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-info">Velocidade Máxima (°/s)</label><input id="maxVelAzimute" type="number" step="0.01" class="form-control bg-white border-info" value="500"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-info">Aceleração Máxima (°/s²)</label><input id="maxAccAzimute" type="number" step="0.01" class="form-control bg-white border-info" value="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-warning h-100">
+                                <div class="card-header bg-warning text-dark fw-bold">Eixo Tilt</div>
+                                <div class="card-body bg-light">
+                                    <div class="mb-3"><label class="form-label fw-bold text-warning">Velocidade de Posicionamento (°/s)</label><input id="velPosTilt" type="number" step="0.01" class="form-control bg-white border-warning" value="30"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-warning">Aceleração de Posicionamento (°/s²)</label><input id="accPosTilt" type="number" step="0.01" class="form-control bg-white border-warning" value="100"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-warning">Velocidade Máxima (°/s)</label><input id="maxVelTilt" type="number" step="0.01" class="form-control bg-white border-warning" value="200"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold text-warning">Aceleração Máxima (°/s²)</label><input id="maxAccTilt" type="number" step="0.01" class="form-control bg-white border-warning" value="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ====================== SECTION: CONFIG (BOTÕES) ====================== -->
+
+                    <div class="mt-4 d-flex gap-3">
+                        <button onclick="setConfig()" class="btn btn-primary btn-lg fw-bold" title="Salva as configurações inseridas nos campos de texto em arquivo JSON e envia aos registradores (HR) da mesa">
+                            <i class="fas fa-save"></i> Salvar Configuração
+                        </button>
+
+                        <button onclick="getConfig()" class="btn btn-outline-secondary btn-lg fw-bold" title="Atualiza o arquivo de configuração e as caixas de texto com os valores atuais lidos da mesa">
+                            <i class="fas fa-folder-open"></i> Ler Configuração
+                        </button>
+                    </div>
+               
+                    <!-- ====================== MANUAL / CONSOLE ====================== -->
+                    <hr class="my-4">
+                    <div class="mt-3">
+                        <!-- CONSOLE -->
+                        <div class="card border-dark mb-4">
+                            <div class="card-header bg-dark text-white fw-bold fs-5">
+                                <i class="fas fa-terminal"></i> Console de Engenharia
+                            </div>
+                            <div class="card-body bg-light">
+                                <div class="input-group mb-3">
+                                    <input id="cmdInput" type="text" class="form-control" placeholder="Ex: R VPA | W VPA 30 | READ 72">
+
+                                    <button onclick="sendRawCommand()" class="btn btn-dark fw-bold">
+                                        <i class="fas fa-paper-plane"></i> Enviar
+                                    </button>
+                                </div>
+
+                                <div id="cmdOutput" class="form-control font-monospace" style="height: 80px; overflow-y: auto; background:#000; color:#0f0;">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- REFERÊNCIA -->
+                        <div class="card border-secondary">
+                            <div class="card-header bg-secondary text-white fw-bold fs-5">
+                                <i class="fas fa-book"></i> Referência Rápida
+                            </div>
+                            <div class="card-body bg-light fs-5">
+                                <div class="mb-3">
+                                    <b>Comandos:</b>
+                                        <pre class="small mb-0">READ addr
+                                        WRITE addr val
+                                        R VPA
+                                        W VPA 30</pre>
+                                </div>
+                                <div class="mb-3">
+                                    <b>Exemplos de Movimento:</b>
+                                    <pre class="small mb-0"># 1. HABILITAR SISTEMA
+                                        WRITE 22 1
+
+                                        # 2. CONFIGURAÇÃO
+                                        WRITE 72 3000
+                                        WRITE 74 10000
+                                        WRITE 62 3000
+                                        WRITE 64 10000
+
+                                        # 3. JOG AZIMUTE +
+                                        WRITE 56 500
+                                        WRITE 28 1
+
+                                        # 4. JOG AZIMUTE -
+                                        WRITE 56 300
+                                        WRITE 28 2
+
+                                        # 5. JOG TILT +
+                                        WRITE 46 200
+                                        WRITE 26 1
+
+                                        # 6. PARAR
+                                        WRITE 28 0
+                                        WRITE 26 0
+
+                                        # 7. POSICIONAMENTO
+                                        WRITE 70 90000
+                                        WRITE 60 64536
+                                        WRITE 61 65535
+                                        WRITE 28 4
+                                        WRITE 26 4
+                                    </pre>
+                                </div>
+
+                                <div class="text-muted small">
+                                    HR = escrita/configuração<br>
+                                    IR = leitura/feedback<br>
+                                    INT32 = HIGH &lt;&lt; 16 | LOW<br>
+                                    Escalas:<br>
+                                    • Posição → /1.000.000<br>
+                                    • Velocidade → /100 (HR) ou /1.000.000 (IR)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- ====================== SECTION: README ====================== -->
+                <div id="readme" class="section">
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3><i class="fas fa-book"></i> README - Documentação Completa</h3>
+
+                        <button onclick="showSection(&#39;monitor&#39;)" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar ao Console
+                        </button>
+                    </div>
+
+                    <div id="readme-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CARREGAR README.md ====================
+        async function loadReadme() {
+           console.log("LOAD README DISPARADO");
+            const contentDiv = document.getElementById('readme-content');
+            contentDiv.innerHTML = '<p class="text-info">Carregando README.md do servidor...</p>';
+
+            try {
+                const response = await fetch('/static/README.md');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const markdownText = await response.text();
+
+                const converter = new window.showdown.Converter({
+                    tables: true,
+                    tasklists: true,
+                    ghCodeBlocks: true,
+                    simplifiedAutoLink: true
+                });
+
+                contentDiv.innerHTML = converter.makeHtml(markdownText);
+                console.log("TAMANHO HTML:", contentDiv.innerHTML.length);
+            } catch (error) {
+                console.error("Erro ao carregar README:", error);
+                contentDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Não foi possível carregar o README.md</strong><br><br>
+                        Verifique se o arquivo existe em:<br>
+                        <code>/static/README.md</code><br><br>
+                        Erro: ${error.message}
+                    </div>`;
+            }
+        }
+
+        // ==================== NAVEGAÇÃO ====================
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.classList.add('active');
+                if (sectionId === 'readme') {
+                    loadReadme();
+                }
+            }
+
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            const activeLink = document.querySelector(`a[onclick="showSection('${sectionId}')"]`);
+            if (activeLink) activeLink.classList.add('active');
+        }
+
+        // ==================== JAVASCRIPT PRINCIPAL (completo) ====================
+        let updateInterval = null;
+        let chartAzi, chartTilt;
+        let timeData = [], aziPosData = [], aziVelData = [], tiltPosData = [], tiltVelData = [];
+        let startTime = null;
+        let consecutiveErrors = 0;
+        const MAX_CONSECUTIVE_ERRORS = 5;
+        let chartWindow = 10;
+
+        function initCharts() {
+            const ctxAzi = document.getElementById('chartAzi').getContext('2d');
+
+            chartAzi = new Chart(ctxAzi, {
+                type: 'line',
+                data: {
+                    labels: timeData,
+                    datasets: [
+                        {
+                            label: 'Azimute (°)',
+                            data: aziPosData,
+                            borderColor: '#ff4d4f',      // vermelho mais forte
+                            borderWidth: 1,
+                            tension: 0.1,
+                            // borderDash: [6, 4]           // TRACEJADO
+                        },
+                        {
+                            label: 'Tilt (°)',
+                            data: tiltPosData,
+                            borderColor: '#00c897',      // verde mais vivo
+                            borderWidth: 2.5,
+                            tension: 0.1
+                            // linha sólida
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    pointRadius: 0,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            min: 0,
+                            max: chartWindow,
+                            title: { display: true, text: 'Tempo (s)' },
+                            ticks: { stepSize: 1 }
+                        },
+                        y: {
+                            min: 0,
+                            ticks: {
+                                stepSize: 30,
+                            },
+                            title: { display: true, text: 'Posição (°)' }
+                        }
+                    }
+                }
+            });
+                        
+
+            const ctxTilt = document.getElementById('chartTilt').getContext('2d');
+
+            chartTilt = new Chart(ctxTilt, {
+                type: 'line',
+                data: {
+                    labels: timeData,
+                    datasets: [
+                        {
+                            label: 'Azimute (°/s)',
+                            data: aziVelData,
+                            borderColor: '#ff4d4f',      // azul
+                            borderWidth: 1,
+                            tension: 0.1,
+                            // borderDash: [4, 3]
+                        },
+                        {
+                            label: 'Tilt (°/s)',
+                            data: tiltVelData,
+                            borderColor: '#00c897',      // amarelo forte
+                            borderWidth: 2.5,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    pointRadius: 0,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            min: 0,
+                            max: chartWindow,
+                            title: { display: true, text: 'Tempo (s)' },
+                            ticks: { stepSize: 1 }
+                        },
+                        y: {
+                            min: 0,
+                            ticks: {
+                                stepSize: 10,            
+                            },
+                            title: { display: true, text: 'Velocidade (°/s)' }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('chart-window-slider').addEventListener('input', function() {
+                chartWindow = parseInt(this.value);
+                document.getElementById('window-value').textContent = chartWindow;
+                if (chartAzi) { chartAzi.options.scales.x.max = chartWindow; chartAzi.update('none'); }
+                if (chartTilt) { chartTilt.options.scales.x.max = chartWindow; chartTilt.update('none'); }
+            });
+        }
+
+        async function fetchWithTimeout(url, options = {}, timeout = 2000) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(url, { ...options, signal: controller.signal });
+                clearTimeout(id);
+                return response;
+            } catch (error) {
+                clearTimeout(id);
+                throw error;
+            }
+        }
+
+        let currentScaleAzi = 0.5;
+        let currentScaleTilt = 0.5;
+
+        // ==================== PARÂMETROS DE FILTRO ====================
+        let filterEnabled = true;
+        let POS_DEADBAND = 0.2;
+        let VEL_DEADBAND = 0.1;
+
+        let aziPosContData = [];
+        let tiltPosContData = [];
+
+        function applyDeadband(newVal, lastVal, threshold) {
+            if (lastVal === undefined || !isFinite(lastVal)) return newVal;
+            return Math.abs(newVal - lastVal) < threshold ? lastVal : newVal;
+        }
+
+        async function updateDados() {
+            try {
+                const res = await fetchWithTimeout('/api/dados', {}, 2000);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                
+                const data = await res.json();
+                consecutiveErrors = 0;
+
+                const posAziEl = document.getElementById('pos-azi');
+                const velAziEl = document.getElementById('vel-azi');
+                const posTiltEl = document.getElementById('pos-tilt');
+                const velTiltEl = document.getElementById('vel-tilt');
+                const statusEl = document.getElementById('conn-status');
+
+                if (data.conectado) {
+
+                    let aziPosRaw = Number(data.azimutePosicaoLida);
+                    let tiltPosRaw = Number(data.tiltPosicaoLida);
+
+                    if (!isFinite(aziPosRaw)) aziPosRaw = 0;
+                    if (!isFinite(tiltPosRaw)) tiltPosRaw = 0;
+
+                    // ==================== UNWRAP ====================
+                    function unwrapAngle(newVal, lastVal) {
+                        if (lastVal === undefined || !isFinite(lastVal)) return newVal;
+                        let diff = newVal - lastVal;
+                        while (diff > 180) diff -= 360;
+                        while (diff < -180) diff += 360;
+                        return lastVal + diff;
+                    }
+
+                    let aziPos = aziPosRaw;
+                    let tiltPos = tiltPosRaw;
+
+                    if (aziPosContData.length > 0) {
+                        aziPos = unwrapAngle(aziPosRaw, aziPosContData[aziPosContData.length - 1]);
+                    }
+
+                    if (tiltPosContData.length > 0) {
+                        tiltPos = unwrapAngle(tiltPosRaw, tiltPosContData[tiltPosContData.length - 1]);
+                    }
+
+                    // ==================== FILTRO (DOMÍNIO CONTÍNUO) ====================
+                    let lastAziCont = aziPosContData[aziPosContData.length - 1];
+                    let lastTiltCont = tiltPosContData[tiltPosContData.length - 1];
+
+                    let aziPosFilteredCont = filterEnabled
+                        ? applyDeadband(aziPos, lastAziCont, POS_DEADBAND)
+                        : aziPos;
+
+                    let tiltPosFilteredCont = filterEnabled
+                        ? applyDeadband(tiltPos, lastTiltCont, POS_DEADBAND)
+                        : tiltPos;
+
+                    // ==================== NORMALIZAÇÃO (APENAS DISPLAY) ====================
+                    const aziPosDisplay = ((aziPosFilteredCont % 360) + 360) % 360;
+                    const tiltPosDisplay = ((tiltPosFilteredCont % 360) + 360) % 360;
+
+                    // ==================== DISPLAY ====================
+                    posAziEl.textContent = aziPosDisplay.toFixed(4);
+                    posTiltEl.textContent = tiltPosDisplay.toFixed(4);
+                    velAziEl.textContent = data.azimuteVelocidadeLida.toFixed(4);
+                    velTiltEl.textContent = data.tiltVelocidadeLida.toFixed(4);
+
+                    statusEl.innerHTML = `<span class="text-success">Conectado</span>`;
+
+                    // ==================== TEMPO ====================
+                    const now = Date.now();
+                    if (!startTime) startTime = now;
+                    const elapsed = (now - startTime) / 1000;
+
+                    // ==================== FILTRO VELOCIDADE ====================
+                    let lastAziVel = aziVelData[aziVelData.length - 1];
+                    let lastTiltVel = tiltVelData[tiltVelData.length - 1];
+
+                    let aziVelFiltered = filterEnabled
+                        ? applyDeadband(data.azimuteVelocidadeLida, lastAziVel, VEL_DEADBAND)
+                        : data.azimuteVelocidadeLida;
+
+                    let tiltVelFiltered = filterEnabled
+                        ? applyDeadband(data.tiltVelocidadeLida, lastTiltVel, VEL_DEADBAND)
+                        : data.tiltVelocidadeLida;
+
+                    // ==================== ARMAZENAMENTO ====================
+                    timeData.push(elapsed);
+
+                    // contínuo (para cálculo correto)
+                    aziPosContData.push(aziPosFilteredCont);
+                    tiltPosContData.push(tiltPosFilteredCont);
+
+                    // normalizado (para gráfico)
+                    aziPosData.push(aziPosDisplay);
+                    tiltPosData.push(tiltPosDisplay);
+
+                    // velocidade
+                    aziVelData.push(aziVelFiltered);
+                    tiltVelData.push(tiltVelFiltered);
+
+                    // ==================== JANELA DE TEMPO ====================
+                    while (timeData.length > 0 && (timeData[timeData.length - 1] - timeData[0]) > chartWindow) {
+                        timeData.shift();
+
+                        aziPosData.shift();
+                        tiltPosData.shift();
+                        aziVelData.shift();
+                        tiltVelData.shift();
+
+                        // MUITO IMPORTANTE
+                        aziPosContData.shift();
+                        tiltPosContData.shift();
+                    }
+
+                    const t0 = timeData[0] || 0;
+                    const timeDataRel = timeData.map(t => t - t0);
+
+                    // ==================== ESCALA DINÂMICA ====================
+                    const velAziAbs = Math.abs(data.azimuteVelocidadeLida);
+                    const velTiltAbs = Math.abs(data.tiltVelocidadeLida);
+
+                    // Azimute
+                    let SCALE_MARGIN_AZI = velAziAbs < 0.8 ? 1.05 : 1.3;
+                    let DEAD_BAND_AZI = velAziAbs < 0.8 ? 0.2 : 1.0;
+                    let MIN_SCALE_AZI = velAziAbs < 0.8 ? 0.3 : 5;
+                    const maxAzi = Math.max(...aziVelData.map(v => Math.abs(v))) || 0.01;
+                    let targetAzi = Math.max(MIN_SCALE_AZI, maxAzi * SCALE_MARGIN_AZI);
+
+                    if (targetAzi > currentScaleAzi) currentScaleAzi = targetAzi;
+                    else if (targetAzi < currentScaleAzi - DEAD_BAND_AZI) currentScaleAzi = targetAzi;
+
+                    currentScaleAzi = Math.min(currentScaleAzi, 550);
+
+                    // Tilt
+                    let SCALE_MARGIN_TILT = velTiltAbs < 0.8 ? 1.05 : 1.3;
+                    let DEAD_BAND_TILT = velTiltAbs < 0.8 ? 0.2 : 1.0;
+                    let MIN_SCALE_TILT = velTiltAbs < 0.8 ? 0.3 : 5;
+                    const maxTilt = Math.max(...tiltVelData.map(v => Math.abs(v))) || 0.01;
+                    let targetTilt = Math.max(MIN_SCALE_TILT, maxTilt * SCALE_MARGIN_TILT);
+
+                    if (targetTilt > currentScaleTilt) currentScaleTilt = targetTilt;
+                    else if (targetTilt < currentScaleTilt - DEAD_BAND_TILT) currentScaleTilt = targetTilt;
+
+                    currentScaleTilt = Math.min(currentScaleTilt, 220);
+
+                    // ==================== UPDATE GRÁFICOS ====================
+                    if (chartAzi) {
+                        chartAzi.data.labels = timeDataRel;
+                        chartAzi.data.datasets[0].data = aziPosData;
+                        chartAzi.data.datasets[1].data = tiltPosData;
+                        chartAzi.options.scales.x.min = 0;
+                        chartAzi.options.scales.x.max = chartWindow;
+                        chartAzi.update('none');
+                    }
+
+                    if (chartTilt) {
+                        chartTilt.data.labels = timeDataRel;
+                        chartTilt.data.datasets[0].data = aziVelData;
+                        chartTilt.data.datasets[1].data = tiltVelData;
+                        chartTilt.options.scales.x.min = 0;
+                        chartTilt.options.scales.x.max = chartWindow;
+                        chartTilt.update('none');
+                    }
+
+                } else {
+                    throw new Error("Resposta indica desconexão");
+                }
+
+            } catch (e) {
+                consecutiveErrors++;
+
+                document.getElementById('pos-azi').textContent = "---";
+                document.getElementById('vel-azi').textContent = "---";
+                document.getElementById('pos-tilt').textContent = "---";
+                document.getElementById('vel-tilt').textContent = "---";
+                document.getElementById('conn-status').innerHTML = `<span class="text-danger">Sem conexão</span>`;
+
+                if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS && updateInterval) {
+                    clearInterval(updateInterval);
+                    updateInterval = null;
+                }
+            }
+        }
+
+        function iniciarTimer(ms) {
+            if (updateInterval) clearInterval(updateInterval);
+            updateDados();
+            updateStatusGravacao();
+            updateInterval = setInterval(() => { updateDados(); updateStatusGravacao(); }, ms);
+        }
+
+        function alterarIntervalo() {
+            let valor = parseInt(document.getElementById("update-interval-input").value);
+            if (isNaN(valor) || valor < 10) valor = 10;
+            if (valor > 10000) valor = 10000;
+            iniciarTimer(valor);
+        }
+
+        async function updateStatusGravacao() {
+            try {
+                const res = await fetch('/api/status_gravacao');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const indicator = document.getElementById('gravacao-indicator');
+                if (data.gravando) {
+                    indicator.classList.remove('d-none');
+                } else {
+                    indicator.classList.add('d-none');
+                }
+            } catch (e) {
+                document.getElementById('gravacao-indicator').classList.add('d-none');
+            }
+        }
+
+        async function sendRawCommand() {
+            const input = document.getElementById("cmdInput");
+            const output = document.getElementById("cmdOutput");
+
+            const cmd = input.value.trim();
+
+            if (!cmd) {
+                output.innerHTML = "⚠️ Comando vazio";
+                return;
+            }
+
+            output.innerHTML = "⏳ Enviando...";
+
+            const data = await sendCommand("raw", { command: cmd });
+
+            if (data) {
+                output.innerHTML = `<b>Status:</b> ${data.status}<br>${data.message}`;
+            } else {
+                output.innerHTML = "❌ Falha no envio";
+            }
+        }
+
+        async function sendCommand(endpoint, body = {}) {
+            try {
+                const res = await fetch(`/api/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await res.json();
+
+                if (data.status === 'ok' || data.status === 'partial' || data.status === 'parado') {
+                    if (endpoint === 'hab_jog') {
+                        showToast("Botões HABILITADOS", 'success');
+                    } 
+                    else if (endpoint === 'des_jog') {
+                        showToast("Botões DESABILITADOS", 'success');
+                    }
+                    return data;
+                } else {
+                    showToast(data.erro || data.message || "Falha ao executar comando", 'danger');
+                }
+            } catch (e) {
+                showToast("Erro de comunicação com o servidor", 'danger');
+            }
+        }
+
+        async function startGravacao() {
+            try {
+                const res = await fetch('/api/gravacao', { method: 'POST', cache: 'no-store' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    for (let i = 0; i < 4; i++) {
+                        await updateStatusGravacao();
+                        await new Promise(r => setTimeout(r, 200 * (i + 1)));
+                    }
+                }
+            } catch (e) { console.error("Erro ao iniciar gravação:", e); }
+        }
+
+        async function stopGravacao() {
+            try {
+                const res = await fetch('/api/parar_gravacao', { method: 'POST', cache: 'no-store' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    for (let i = 0; i < 4; i++) {
+                        await updateStatusGravacao();
+                        await new Promise(r => setTimeout(r, 200 * (i + 1)));
+                    }
+                }
+            } catch (e) { console.error("Erro ao parar gravação:", e); }
+        }
+
+        function sendEmergencia() { sendCommand('emergencia'); }
+        function sendReset() { sendCommand('reset'); }
+
+        function iniciarJogAuto() {
+            const body = {
+                inctime: document.getElementById('inctime').value,
+                incveltilt: document.getElementById('incveltilt').value,
+                incvelazi: document.getElementById('incvelazi').value,
+                velinitilt: document.getElementById('velinitilt').value,
+                velendtilt: document.getElementById('velendtilt').value,
+                veliniazi: document.getElementById('veliniazi').value,
+                velendazi: document.getElementById('velendazi').value
+            };
+            sendCommand('jog_automatizada', body);
+        }
+
+        let monitorInterval = null;
+        let lastCount = 0;
+
+        async function execScript() {
+            const hiddentxt = document.getElementById('script-text').value.trim();
+            if (!hiddentxt) return alert('Script vazio!');
+
+            const res = await sendCommand('executa_script', { hiddentxt });
+
+            if (res && res.status === 'ok') {
+
+                // reseta contador local
+                lastCount = 0;
+                document.getElementById('mark-counter').innerText = '0/0';
+                document.getElementById('mark-counter-main').innerText = '0/0';
+
+                // inicia monitoramento
+                startMarkMonitor();
+            }
+        }
+
+        async function calcTempoScript() {
+            const hiddentxt = document.getElementById('script-text').value.trim();
+            if (!hiddentxt) return;
+            try {
+                const res = await fetch('/api/le_tempo_script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hiddentxt })
+                });
+                const data = await res.json();
+                const el = document.getElementById('tempo-result');
+                el.classList.remove('d-none');
+                el.innerHTML = `<strong>Tempo total estimado: ${data.tempoLido.toFixed(2)} minutos</strong>`;
+            } catch (e) {
+                alert('Erro ao calcular tempo');
+            }
+        }
+
+        function carregarScript(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => document.getElementById('script-text').value = e.target.result;
+            reader.readAsText(file);
+        }
+
+        async function salvarScript() {
+            const conteudo = document.getElementById('script-text').value.trim();
+            if (!conteudo) return alert('O script está vazio.');
+            try {
+                const res = await fetch('/api/download_script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conteudo })
+                });
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "script_mesa.txt";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('Falha ao salvar o script: ' + e.message);
+            }
+        }
+
+        function startMarkMonitor() {
+
+            if (monitorInterval) clearInterval(monitorInterval);
+            
+            monitorInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/mark_status');
+                    const data = await res.json();
+
+                    const count = data.count ?? 0;
+                    const total = data.total ?? 0;
+
+                    document.getElementById('mark-counter').innerText = ` ${data.count}/${data.total}`;
+                    document.getElementById('mark-counter-main').innerText = ` ${data.count}/${data.total}`;
+
+                    if (count !== lastCount) {
+                        beepIndustrial();
+                        lastCount = count;
+                    }
+
+                } catch (e) {
+                    console.error(e);
+                }
+            }, 300);
+        }
+
+        async function setConfig() {
+            const body = {
+                velPosAzimute: document.getElementById('velPosAzimute').value,
+                accPosAzimute: document.getElementById('accPosAzimute').value,
+                maxVelAzimute: document.getElementById('maxVelAzimute').value,
+                maxAccAzimute: document.getElementById('maxAccAzimute').value,
+                velPosTilt: document.getElementById('velPosTilt').value,
+                accPosTilt: document.getElementById('accPosTilt').value,
+                maxVelTilt: document.getElementById('maxVelTilt').value,
+                maxAccTilt: document.getElementById('maxAccTilt').value
+            };
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                alert(data.status === 'ok' ? 'Configurações salvas com sucesso!' : 'Erro ao salvar configurações.');
+            } catch (e) {
+                alert('Falha na comunicação: ' + e.message);
+            }
+        }
+
+        async function getConfig() {
+            try {
+                const res = await fetch('/api/config');
+                const data = await res.json();
+
+                console.log("🔍 DADOS RECEBIDOS DO BACKEND:", data);
+
+                // Atribuição FORÇADA como string + Number() para evitar bugs do input type=number
+                var vpa = document.getElementById('velPosAzimute').value = Number(data.velPosAzimute) || 30;
+                var vpt = document.getElementById('velPosTilt').value    = Number(data.velPosTilt) || 30;
+                var apa = document.getElementById('accPosAzimute').value = Number(data.accPosAzimute) || 100;
+                var apt = document.getElementById('accPosTilt').value    = Number(data.accPosTilt) || 100;
+                var mva = document.getElementById('maxVelAzimute').value = Number(data.maxVelAzimute) || 500;
+                var mvt = document.getElementById('maxVelTilt').value    = Number(data.maxVelTilt) || 200;
+                var maa = document.getElementById('maxAccAzimute').value = Number(data.maxAccAzimute) || 100;
+                var mat = document.getElementById('maxAccTilt').value    = Number(data.maxAccTilt) || 100;
+
+                // Força novamente como string (isso resolve a maioria dos bugs com step="0.01")
+                setTimeout(() => {
+                    document.getElementById('velPosAzimute').value = String(Number(data.velPosAzimute) || 30);
+                    document.getElementById('velPosTilt').value    = String(Number(data.velPosTilt) || 30);
+                }, 50);
+
+                console.log(`✅ Atribuído velPosAzimute = ${data.velPosAzimute}, velPosTilt = ${data.velPosTilt}`);
+
+                alert(
+                    `✅ Configurações carregadas com sucesso!\n\n` +
+                    `Vel. Pos. Azimute: ${vpa}\n` +
+                    `Acc. Pos. Azimute: ${apa}\n` +
+                    `Vel. Máx. Azimute: ${mva}\n` +
+                    `Vel. Pos. Tilt:    ${vpt}\n` +
+                    `Acc. Pos. Tilt:    ${apt}\n` +
+                    `Vel. Máx. Tilt:    ${mvt}`
+                );
+
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao ler configurações: ' + e.message);
+            }
+        }
+ 
+        let posicionando = false;
+
+        async function iniciarPosicionamentoEixo(eixo) {
+            try {
+                if (!['azi', 'tilt', 'ambos'].includes(eixo)) {
+                    throw new Error(`Eixo inválido: ${eixo}`);
+                }
+
+                const posAziRaw = Number(document.getElementById('pos-azi-input').value);
+                const posTiltRaw = Number(document.getElementById('pos-tilt-input').value);
+
+                const posAzi = Number.isFinite(posAziRaw) ? posAziRaw : null;
+                const posTilt = Number.isFinite(posTiltRaw) ? posTiltRaw : null;
+
+                const payload = { eixo };
+
+                // AZI
+                if (eixo === 'azi' || eixo === 'ambos') {
+                    payload.posAzimute = posAzi;
+                }
+
+                // TILT
+                if (eixo === 'tilt' || eixo === 'ambos') {
+                    payload.posTilt = posTilt;
+                }
+
+                if (eixo === 'ambos' && posAzi === null && posTilt === null) {
+                    throw new Error('Ambos eixos com valores inválidos');
+                }
+
+                const response = await sendCommand('posicionamento', payload);
+
+                console.log("✅ Resposta:", response);
+
+            } catch (err) {
+                console.error('Erro em iniciarPosicionamentoEixo:', err);
+                alert(`Falha ao posicionar: ${err.message}`);
+            } 
+        }
+     
+        async function iniciarJogEixo(eixo) {
+            try {
+                // 🔒 Validação
+                if (!['azi', 'tilt', 'ambos'].includes(eixo)) {
+                    throw new Error(`Eixo inválido: ${eixo}`);
+                }
+
+                const velAzi = document.getElementById('jog-azi').value;
+                const velTilt = document.getElementById('jog-tilt').value;
+
+                // 🔒 Monta payload
+                const payload = { eixo };
+
+                if (eixo === 'azi' || eixo === 'ambos') {
+                        payload.velAzimute = velAzi;
+                }
+
+                if (eixo === 'tilt' || eixo === 'ambos') {
+                           payload.velTilt = velTilt;
+                }
+
+                await sendCommand('jog', payload);
+
+                console.log(`▶️ Iniciando eixo: ${eixo}`, payload);
+                
+            } catch (err) {
+                console.error('Erro em iniciarJogEixo:', err);
+                alert(`Falha ao iniciar eixo: ${err.message}`);
+            }
+        }   
+
+        async function iniciarJogAutoEixo(eixo) {
+
+            const body = {
+                eixo: eixo,
+                inctime: Number(document.getElementById('inctime').value)
+            };
+
+            if (eixo === 'azi' || eixo === 'ambos') {
+                body.incvelazi = Number(document.getElementById('incvelazi').value);
+                body.veliniazi = Number(document.getElementById('veliniazi').value);
+                body.velendazi = Number(document.getElementById('velendazi').value);
+            }
+
+            if (eixo === 'tilt' || eixo === 'ambos') {
+                body.incveltilt = Number(document.getElementById('incveltilt').value);
+                body.velinitilt = Number(document.getElementById('velinitilt').value);
+                body.velendtilt = Number(document.getElementById('velendtilt').value);
+            }
+
+            await sendCommand('jog_automatizada', body);
+
+            console.log(`▶️ Iniciando jog automatizado eixo: ${eixo}`, body);
+        }
+
+        function pararEixos(eixo) {
+            sendCommand('parar', { eixo: eixo });
+            console.log(`⏹️ Parando eixo: ${eixo}`);
+        }
+
+        function showToast(message, type = 'success') {
+            const oldToast = document.getElementById('custom-toast');
+            if (oldToast) oldToast.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'custom-toast';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 25px;
+                right: 25px;
+                padding: 16px 22px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 600;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                min-width: 280px;
+                animation: toastSlideIn 0.4s ease forwards;
+            `;
+
+            let icon = '';
+            let bgColor = '';
+
+            if (type === 'success') {
+                bgColor = '#28a745';
+                icon = '✅';
+            } else if (type === 'danger') {
+                bgColor = '#dc3545';
+                icon = '❌';
+            } else if (type === 'warning') {
+                bgColor = '#ffc107';
+                icon = '⚠️';
+                toast.style.color = '#212529';
+            } else {
+                bgColor = '#17a2b8';
+                icon = 'ℹ️';
+            }
+
+            toast.style.backgroundColor = bgColor;
+            toast.innerHTML = `
+                <span style="font-size: 1.4rem;">${icon}</span>
+                <span>${message}</span>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Auto remove após 4,5 segundos
+            setTimeout(() => {
+                toast.style.transition = 'all 0.4s ease';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 2800);
+        }
+
+        function beepIndustrial() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+            function tone(freq, start, duration, volume = 0.8) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'square'; // osc.type = 'square'; // som mais "industrial"
+                osc.frequency.value = freq;
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                gain.gain.setValueAtTime(volume, start);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+
+                osc.start(start);
+                osc.stop(start + duration);
+            }
+
+            const now = ctx.currentTime;
+
+            // beep duplo (clássico)
+            // tone(1200, now, 0.08, 0.8);
+            tone(1200, now + 0.15, 0.08, 0.8);
+        }
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const el = document.getElementById("conn-status");
+
+    // guarda o valor inicial vindo do Jinja
+    const valorInicial = el.textContent;
+
+    // impede que outras partes do código apaguem o conteúdo
+    setInterval(() => {
+        if (!el.textContent || el.textContent.trim() === "") {
+            el.textContent = valorInicial;
+        }
+    }, 500);
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    let lastCount = 0;
+
+    const statusEl = document.getElementById("conn-status");
+    const dot = document.querySelector(".status-dot");
+
+    setInterval(async () => {
+        try {
+            const res = await fetch('/api/mark_status');
+            const data = await res.json();
+
+            // ✔️ SE CHEGOU AQUI → CONECTADO
+            statusEl.textContent = "Conectado";
+            dot.style.backgroundColor = "#28a745";
+            
+
+            if (data.count !== lastCount) {
+                document.getElementById('mark-counter').innerText = ` ${data.count}/${data.total}`;
+                document.getElementById('mark-counter-main').innerText = ` ${data.count}/${data.total}`;
+                lastCount = data.count;
+            }
+
+        } catch (e) {
+            console.error(e);
+
+            // ❌ FALHOU → DESCONECTADO
+            statusEl.textContent = "Desconectado";
+            dot.style.backgroundColor = "#dc3545";
+        }
+    }, 500);
+});
+
+        // Inicialização
+        window.onload = function() {
+            initCharts();
+            iniciarTimer(100);
+            showSection('monitor');
+            document.getElementById('chart-window-slider').value = 10;
+
+            // ==================== CONTROLES DE FILTRO ====================
+            document.getElementById('filter-enable').addEventListener('change', (e) => {
+                filterEnabled = e.target.checked;
+            });
+
+            document.getElementById('pos-deadband').addEventListener('input', (e) => {
+                POS_DEADBAND = parseFloat(e.target.value) || 0;
+            });
+
+            document.getElementById('vel-deadband').addEventListener('input', (e) => {
+                VEL_DEADBAND = parseFloat(e.target.value) || 0;
+            });
+        };
+    </script>
+
+</body></html>
