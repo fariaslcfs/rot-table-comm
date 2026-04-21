@@ -144,6 +144,10 @@ Ordem ideal:
 - O simulador substitui o hardware real da mesa
 - O arquivo `mesa_config.json` define o estado inicial
 - Sempre garantir que o simulador esteja rodando antes dos testes
+- IP mesa:
+  - Simulador: `127.0.0.1`
+  - Mesa real: `192.168.1.1`
+
 - Portas padrão:
   - Simulador: `5020`
   - Mesa real: `502`

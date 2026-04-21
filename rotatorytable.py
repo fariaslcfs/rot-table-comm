@@ -9,11 +9,12 @@ MODBUS_PORT_TEST = 5020          # Evita conflito com porta 502 (well-known)
 
 
 class RotTableWrapper:
+    
     """
-    Wrapper estável para controle da mesa inercial IEAv+
-    via Modbus TCP (pymodbus 3.x+ / 4.x compatível).
-
-    Foco: simplicidade de uso em laboratório.
+    Wrapper estável para controle da mesa inercial Infax da EFO-S
+    via Modbus TCP (pymodbus 3.x+ / 4.x compatível). 
+    Objetivo: simplicidade de uso em laboratório.
+    
     """
 
     def __init__(self, host=SERVER_TEST, port=MODBUS_PORT_TEST):
@@ -40,7 +41,7 @@ class RotTableWrapper:
             self.client.connect()
 
     # =====================================================
-    # CORE MODBUS or HELPERS
+    # NÚCLEO MODBUS ou HELPERS
     # =====================================================
 
     def write(self, addr, value):
@@ -61,7 +62,7 @@ class RotTableWrapper:
         return self.client.read_input_registers(address=addr, count=count)
 
     # =====================================================
-    # UTILITÁRIO
+    # UTILITÁRIO ou HELPER
     # =====================================================
 
     def normalize(self, angle_deg: float) -> int:
