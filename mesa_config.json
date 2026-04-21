@@ -1,0 +1,16 @@
+{
+    "velPosAzimute": 60.0,
+    "accPosAzimute": 100.0,
+    "maxVelAzimute": 500.0,
+    "maxAccAzimute": 100.0,
+    "velPosTilt": 60.0,
+    "accPosTilt": 100.0,
+    "maxVelTilt": 200.0,
+    "maxAccTilt": 100.0,
+    "posIniAzimute": 0.0,
+    "posIniTilt": 0.0,
+    "velIniAzimute": 0.0,
+    "velIniTilt": 0.0,
+    "K": 1.0,
+    "DT": 0.001
+}

@@ -1,97 +1,191 @@
-Addresses to control rotary table from IEAv
-PLC is connected through modbus protocol 
-192.168.1.1 port 502
+# Mesa Inercial IEAv — Controle via Modbus TCP (Python Interface)
 
-The idea is to avoid the compilation of the original code in C, that is cumbersome when dealing with different systems.
-It requires the modbus compilation, the mongoose server, the javascript application, all that system that came with the table.
-Instead, we can simply use a python package to communicate using modbusTCP library. 
+## Visão Geral
 
-All velocities and positions must be entered as engineering units multiplied by 100: input_variable = ang_vel*100
+Este documento descreve a interface de controle da mesa inercial de 2 eixos (Azimuth e Tilt) utilizada no IEAv, operando via protocolo **Modbus TCP**.
 
-The commands in the c library opens and closes the modbus connection for each communication
+A abordagem substitui o sistema original em C (com dependência de compilação, Mongoose server e frontend JS) por uma solução direta em Python, simplificando manutenção, testes e integração.
 
-Movement control
+### Parâmetros de conexão
 
-	20:		emergency stop
-			4 - stop
-			0 - reset to normal
+- IP padrão do controlador: `192.168.1.1`
+- Porta: `502`
+- Protocolo: Modbus TCP
 
-			reset function:	write 1, then 0, then 1, then 0.
-			after config: write 2, then 0.
+---
 
-	22:		pitch and yaw movement
-			0 - off
-			1 - on
-			2 - backward?
+## Princípios de operação
 
-	24: 	yaw movement??? 	% something is missing from this command, it is not the same as #28
-			0 - off
-			1 - on
+- Todas as posições e velocidades são enviadas em **unidades de engenharia escaladas**
+- Escalas utilizadas:
+  - Velocidade: `valor × 100`
+  - Posição: `valor × 1000`
+- Registradores de 32 bits são divididos em dois registradores de 16 bits:
+  - LOW = `value & 0xFFFF`
+  - HIGH = `value >> 16`
 
-	26:		pitch movement	
-			0 - off
-			1 - on forward	
-			2 - on backward
+---
 
-	28: 	yaw movement
-			0 - off
-			1 - on forward
-			2 - on backward
-			4 - ?
+## Estrutura de registradores (Controlador da mesa)
 
-			after position control
-			send 0, then 4.
+### Controle de movimento
+
+| Endereço | Função | Descrição |
+|----------|--------|-----------|
+| 20 | Emergency Stop | 4 = stop imediato / 0 = reset |
+| 22 | Enable Tilt | 0 off / 1 on / 2 reverse |
+| 24 | Enable Azimuth | 0 off / 1 on |
+| 26 | Tilt Command | 0 stop / 1 forward / 2 reverse |
+| 28 | Azimuth Command | 0 stop / 1 forward / 2 reverse / 4 mode pos |
+
+---
+
+### Configuração de movimento (posicionamento)
+
+| Endereço | Função |
+|----------|--------|
+| 40 | Tilt acceleration |
+| 42 | Tilt max acceleration |
+| 50 | Azimuth acceleration |
+| 52 | Azimuth max acceleration |
+| 60 | Tilt position (LOW/HIGH 32-bit) |
+| 70 | Azimuth position (LOW/HIGH 32-bit) |
+
+---
+
+### Velocidade (jog / controle contínuo)
+
+| Endereço | Função |
+|----------|--------|
+| 46 | Tilt velocity (32-bit) |
+| 56 | Azimuth velocity (32-bit) |
+
+---
+
+### Limites e parâmetros adicionais
+
+| Endereço | Função |
+|----------|--------|
+| 62 | Tilt velocity position |
+| 64 | Tilt acceleration position |
+| 72 | Azimuth velocity position |
+| 74 | Azimuth acceleration position |
+| 76 | Azimuth acceleration (extra) |
+| 80 | Tilt max velocity |
+| 82 | Tilt max acceleration |
+| 90 | Azimuth max velocity |
+| 92 | Azimuth max acceleration |
+
+---
+
+## Regras importantes de operação
+
+### Sequência de posicionamento
+
+Para garantir operação correta do controlador da mesa:
+
+1. Habilitar eixo:
+   - Tilt: `22 = 2`
+   - Azimuth: `24 = 2`
+
+2. Reset comando:
+   - `26 = 0` (Tilt)
+   - `28 = 0` (Azimuth)
+
+3. Enviar posição (32 bits split)
+
+4. Configurar aceleração
+
+5. Ativar modo posição:
+   - `26 = 4` (Tilt)
+   - `28 = 4` (Azimuth)
+
+---
+
+### Sequência de velocidade (jog)
+
+1. Configuração base:
+   - `22 = 1`
+   - `24 = 1`
+   - `40 = 10000`
+   - `42 = 10000`
+   - `50 = 10000`
+   - `52 = 10000`
+
+2. Envio de velocidade:
+   - Tilt: `46` (×100)
+   - Azimuth: `56` (×100)
+
+3. Direção:
+   - 0 = stop
+   - 1 = forward
+   - 2 = reverse
+
+---
+
+## Formato de registradores 32 bits
+
+Alguns registradores exigem divisão em dois registradores de 16 bits.
+
+### Regra
+
+~~~c
+uint16_t LOW  = value & 0xFFFF;
+uint16_t HIGH = value >> 16;
+~~~
+
+### Exemplo prático
+
+Valor:
+
+- 90000
+
+Conversão:
+
+- Hex: 0x00015F90
+
+Resultado:
+
+- LOW = 24464
+- HIGH = 1
+
+---
+
+## Observações de protocolo
+
+- O firmware original em C abre e fecha conexão Modbus a cada comando
+- A implementação Python pode manter conexão persistente
+- Alguns comandos exigem delays (~20ms) entre operações
+- Comando de posição exige transição: 0 → 4
+
+---
+
+## Convenções físicas
+
+- Azimuth = eixo horizontal (yaw)
+- Tilt = eixo vertical (pitch)
+- Posição: graus × 1000
+- Velocidade: graus/s × 100
+
+---
+
+## Resumo operacional
+
+### Movimentos suportados
+
+- Posicionamento absoluto
+- Jog contínuo
+- Stop imediato
+- Controle independente ou combinado de eixos
+
+---
+
+## Nota de engenharia
+
+Este mapeamento foi obtido por engenharia reversa do controlador da mesa IEAv e validado empiricamente via Modbus TCP.
+
+A arquitetura atual elimina dependências do sistema legado e permite controle direto via Python com comportamento equivalente ao firmware original.
 
 
-Setting configuration values
-
-some addresses, for example 46 and 56, receives a 32 bit integer value and must be written in two registers.
-code example:
-		uint16_t regs[2];
-		regs[0] = valor & 0x0000FFFF;
-		regs[1] = valor >> 16; 
-		modbus_write_registers(ctx, endereco, 1, &regs[0]); % equivalent to write_multiple_registers() from modbusTCP in python
-		modbus_write_registers(ctx, endereco + 1, 1, &regs[1]);
-
-
-	40:		pitch acceleration position
-	
-	42:		pitch max acceleration
-
-	46:		pitch velocity	%using write_regs()
-
-	50:		yaw acceleration position?
-	
-	52:		yaw maximum acceleration
-	
-	56: 	yaw velocity	%using write_regs()
-
-
-	60: 	pitch position			%using write_regs()
-
-	62:		pitch velocity position
-
-	64:		pitch acceleration position
-
-	70:		yaw position			%using write_regs()
-
-	72: 	yaw velocity position
-
-	74:		yaw acceleration position
-
-	76:		yaw acceleration position
-
-	80:		pitch max velocity
-
-	82:		pitch max acceleration
-
-	90:		yaw max velocity
-
-	92:		yaw max acceleration
-
-
-
-
-
-
-
+# 👥 Equipe
+**Roney e EFO-S**
