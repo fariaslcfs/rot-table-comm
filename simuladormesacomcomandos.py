@@ -6,10 +6,10 @@ import json
 import os
 
 from pymodbus.server import StartTcpServer
-from pymodbus.datastore import ModbusDeviceContext, ModbusServerContext, ModbusSequentialDataBlock
-
+from pymodbus.datastore import ModbusServerContext,ModbusSlaveContext, ModbusSequentialDataBlock
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
 
 # ==============================
 # CONFIG
@@ -151,12 +151,11 @@ else:
 # MODBUS
 # ==============================
 
-store = ModbusDeviceContext(
+store = ModbusSlaveContext(
     ir=ModbusSequentialDataBlock(0, [0]*200),
     hr=ModbusSequentialDataBlock(0, [0]*200)
 )
-
-context = ModbusServerContext(devices=store, single=True)
+context = ModbusServerContext(slaves=store, single=True)
 
 # ==============================
 # AXIS
