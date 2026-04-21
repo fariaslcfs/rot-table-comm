@@ -1,5 +1,5 @@
 # GuiaParaTesteSimulado.md  
-## Guia de Teste — Simulador da Mesa Inercial (IEAv)
+## Guia de Teste — Simulador da Mesa Inercial (EFO-S)
 
 > Este documento descreve o procedimento padrão para testar a classe `RotTableWrapper`, localizada em `rotatorytable.py`, utilizando o simulador da mesa inercial (`simuladormesacomcomandos.py`) e a interface web (`interfacemesainercial.py`).
 
