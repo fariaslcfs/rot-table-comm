@@ -1,13 +1,13 @@
 ## 🔹 Input Registers (Somente leitura)
-| Endereço | Conteúdo |
+| Endereço 16 bits | Conteúdo |
 |----------|----------|
-| 0-1 | POS_AZI (INT32) |
-| 2-3 | VEL_AZI (INT32) |
-| 4-5 | POS_TILT (INT32) |
-| 6-7 | VEL_TILT (INT32) |
+| 0-1 | POS_AZI |
+| 2-3 | VEL_AZI |
+| 4-5 | POS_TILT |
+| 6-7 | VEL_TILT |
 
 ## 🔹 Holding Registers
-| Endereço | Nome | Descrição |
+| Endereço 16 bits | Nome | Descrição |
 |----------|------|----------|
 | 22 | ENABLE | Habilitação geral |
 | 24 | ENABLE | Habilitação geral |

@@ -1,4 +1,4 @@
-# simulador_mesa.py (VERSÃO FINAL CORRIGIDA COM HOT-RELOAD POR EIXO)
+# VERSÃO FINAL CORRIGIDA COM HOT-RELOAD POR EIXO
 
 import time
 import threading
@@ -15,7 +15,7 @@ from watchdog.events import FileSystemEventHandler
 # CONFIG
 # ==============================
 
-CONFIG_FILE = "mesa_config.json"
+CONFIG_FILE = "mesa_config.json" # Compartilhado pela interface web de controle da mesa inercial
 config_lock = threading.Lock()
 
 # ==============================
@@ -44,7 +44,6 @@ DT = 0.001
 def input_float(msg, default):
     val = input(f"{msg} [{default}]: ").strip()
     return float(val) if val else default
-
 
 def escolher_modo():
     while True:
@@ -83,9 +82,7 @@ def apply_config(cfg):
     vel_ini_tilt = float(cfg.get("velIniTilt", vel_ini_tilt))
 
     # ==============================
-    # 🔴 CORREÇÃO PRINCIPAL
-    # antes: acc e cruise_vel eram únicos
-    # agora: por eixo
+    # acc e cruise_vel por eixo
     # ==============================
 
     acc_azi = float(cfg.get("accPosAzimute", acc_azi))
@@ -212,7 +209,6 @@ def read_dword(addr):
 
 def angular_error(target, current):
     return (target - current + 180) % 360 - 180
-
 
 def update_axis(axis, vel_cmd, target, mode, acc, cruise_vel):
 

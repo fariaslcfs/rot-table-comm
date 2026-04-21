@@ -23,7 +23,7 @@ Ela encapsula:
 ## 2. Dependências
 
 ~~~
-pip install pyModbusTCP
+pip install -r requirements.txt
 ~~~
 
 ---
@@ -111,19 +111,18 @@ normalize(angle):
 from pymodbus.client import ModbusTcpClient
 import time
 
-
-SERVER_PROD = "192.168.1.1"      # Mesa real Infax
-MODBUS_PORT = 502                # Porta padrão Modbus TCP  
-SERVER_TEST = "127.0.0.1"        # Simulador local. Lembre-se de iniciar o simulador antes de executar este script.
-MODBUS_PORT_TEST = 5020          # Evita conflito com porta 502 (well-known)
-
+SERVER_PROD = "192.168.1.1"    # Mesa real Infax
+MODBUS_PORT = 502              # Porta padrão Modbus TCP  
+SERVER_TEST = "127.0.0.1"      # Simulador local. Lembre-se de iniciar o simulador antes de executar este script.
+MODBUS_PORT_TEST = 5020        # Evita conflito com porta 502 (well-known)
 
 class RotTableWrapper:
+    
     """
-    Wrapper estável para controle da mesa inercial IEAv+
-    via Modbus TCP (pymodbus 3.x+ / 4.x compatível).
-
-    Foco: simplicidade de uso em laboratório.
+    Wrapper para controle da mesa inercial Infax da EFO-S
+    via Modbus TCP (pymodbus 3.x+ / 4.x compatível). 
+    Objetivo: simplicidade de uso em laboratório.
+    
     """
 
     def __init__(self, host=SERVER_TEST, port=MODBUS_PORT_TEST):
@@ -150,7 +149,7 @@ class RotTableWrapper:
             self.client.connect()
 
     # =====================================================
-    # CORE MODBUS or HELPERS
+    # NÚCLEO MODBUS ou HELPERS
     # =====================================================
 
     def write(self, addr, value):
@@ -169,10 +168,6 @@ class RotTableWrapper:
     def read_input(self, addr, count=2):
         self._ensure_connection()
         return self.client.read_input_registers(address=addr, count=count)
-
-    # =====================================================
-    # UTILITÁRIO
-    # =====================================================
 
     def normalize(self, angle_deg: float) -> int:
         """
@@ -256,7 +251,7 @@ class RotTableWrapper:
 
         time.sleep(0.02)
 
-    def jog(self, axis: str, velocity: float):
+    def jog(self, velocity: float):
         self.jogazi(velocity)
         self.jogtilt(velocity)
 
@@ -302,7 +297,7 @@ class RotTableWrapper:
 
         self.write(26, 4)
 
-    def pos(self, axis: str, angle: float):
+    def pos(self, angle: float):
         self.posazi(angle)
         self.postilt(angle)
 
@@ -339,6 +334,7 @@ class RotTableWrapper:
     
     def getvel(self):
         return self.getvelazi(), self.getveltilt()
+
     
 ~~~
 

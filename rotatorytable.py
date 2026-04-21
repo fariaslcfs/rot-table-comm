@@ -1,17 +1,15 @@
 from pymodbus.client import ModbusTcpClient
 import time
 
-
-SERVER_PROD = "192.168.1.1"      # Mesa real Infax
-MODBUS_PORT = 502                # Porta padrão Modbus TCP  
-SERVER_TEST = "127.0.0.1"        # Simulador local. Lembre-se de iniciar o simulador antes de executar este script.
-MODBUS_PORT_TEST = 5020          # Evita conflito com porta 502 (well-known)
-
+SERVER_PROD = "192.168.1.1"    # Mesa real Infax
+MODBUS_PORT = 502              # Porta padrão Modbus TCP  
+SERVER_TEST = "127.0.0.1"      # Simulador local. Lembre-se de iniciar o simulador antes de executar este script.
+MODBUS_PORT_TEST = 5020        # Evita conflito com porta 502 (well-known)
 
 class RotTableWrapper:
     
     """
-    Wrapper estável para controle da mesa inercial Infax da EFO-S
+    Wrapper para controle da mesa inercial Infax da EFO-S
     via Modbus TCP (pymodbus 3.x+ / 4.x compatível). 
     Objetivo: simplicidade de uso em laboratório.
     
@@ -60,10 +58,6 @@ class RotTableWrapper:
     def read_input(self, addr, count=2):
         self._ensure_connection()
         return self.client.read_input_registers(address=addr, count=count)
-
-    # =====================================================
-    # UTILITÁRIO ou HELPER
-    # =====================================================
 
     def normalize(self, angle_deg: float) -> int:
         """

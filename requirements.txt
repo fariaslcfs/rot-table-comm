@@ -1,9 +1,9 @@
 # Lista de Dependências #
 
-''' O pacote watchdog é utilizado para monitorar mudanças em arquivos e diretórios. No contexto do projeto, 
-    ele é usado para monitorar alterações no arquivo mesa_config.json em tempo de simulação.
-    O pacote pymodbus é utilizado para implementar a comunicação Modbus, que é um protocolo de
-    comunicação amplamente utilizado em automação industrial.
+''' O pacote watchdog é utilizado para monitorar mudanças em arquivos e diretórios. 
+    No contexto do projeto, é usado para monitorar alterações no arquivo mesa_config.json
+    em tempo de simulação. O pacote pymodbus é utilizado para implementar a comunicação Modbus,
+    que é um protocolo de comunicação amplamente utilizado em automação industrial.
     Uso: pip install -r requirements.txt
 '''
 pymodbus
