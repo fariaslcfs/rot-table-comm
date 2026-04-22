@@ -1466,7 +1466,7 @@ def api_set_config():
                 "conectado": False
             }), 200
 
-        # ====================== ENVIO PARA A MESA (igual ao C original Infax) ======================
+        # ====================== ENVIO PARA A MESA (igual ao C original)   ======================
         try:
             # Azimute
             write_register(72, int(VPosAzi * 100))

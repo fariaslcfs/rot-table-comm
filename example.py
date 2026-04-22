@@ -6,7 +6,7 @@
 
 Descrição:
     Exemplo de uso da classe RotTableComm para controle da mesa inercial
-    Infax com dois eixos (Azimuth e Tilt) via Modbus TCP.
+    com dois eixos (Azimuth e Tilt) via Modbus TCP.
 
 Compatibilidade:
     Python 3.12.3, pymodbus 3.7.4
@@ -19,7 +19,7 @@ from time import sleep
 # CONFIGURAÇÃO DE AMBIENTE
 # =========================================================
 
-SERVER_PROD = "192.168.1.1"      # Mesa real Infax
+SERVER_PROD = "192.168.1.1"      # Mesa real
 MODBUS_PORT = 502                # Porta padrão Modbus TCP
 
 SERVER_TEST = "127.0.0.1"        # Simulador local. Lembre-se de iniciar o simulador antes de executar este script.
