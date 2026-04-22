@@ -10,11 +10,11 @@ from pymodbus.datastore import ModbusServerContext,ModbusSlaveContext, ModbusSeq
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-
 # ==============================
 # CONFIG
 # ==============================
-
+SERVER="127.0.0.1"
+MODBUS_PORT=5020
 CONFIG_FILE = "mesa_config.json" # Compartilhado pela interface web de controle da mesa inercial
 config_lock = threading.Lock()
 
@@ -300,7 +300,7 @@ if __name__ == "__main__":
     threading.Thread(target=loop, daemon=True).start()
 
     try:
-        StartTcpServer(context=context, address=("127.0.0.1", 5020))
+        StartTcpServer(context=context, address=(SERVER, MODBUS_PORT))
     finally:
         observer.stop()
         observer.join()

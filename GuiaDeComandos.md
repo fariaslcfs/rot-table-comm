@@ -64,6 +64,7 @@ Exemplo:
 - posazi(45) → move Azimuth para 45°
 - postilt(10) → move Tilt para 10°
 - pos(22.4) → move ambos eixos para 22.4 °
+- pos(0.0) → move ambos eixos para 0.0 °
 
 ---
 
@@ -72,7 +73,9 @@ Exemplo:
 ~~~
 jogazi(velocidade)
 jogtilt(velocidade)
+jog.stop()
 jog(velocidade)
+jog.stop()
 ~~~
 
 Exemplo:

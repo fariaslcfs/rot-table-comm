@@ -58,16 +58,12 @@ Existem duas formas recomendadas:
 
 ## 3.1 MODO SCRIPT (.py)
 
-Criar um arquivo de teste, por exemplo:
-
-~~~
-test_rot.py
-~~~
+Usar o arquivo example.py:
 
 E executar:
 
 ~~~
-python test_rot.py
+python example.py
 ~~~
 
 Dentro do script, utilizar a classe:
@@ -75,16 +71,18 @@ Dentro do script, utilizar a classe:
 ~~~python
 from rotatorytable import RotTableWrapper
 
-rot = RotTableWrapper("127.0.0.1", 5020)
+rot = RotTableWrapper() # sem argumentos no construtor, usa-se o padrão, que é 127.0.0.1:5020. Veja na classe.
 
-rot.connect()
 rot.enable()
 
-rot.pos("azimuth", 30)
-rot.pos("tilt", 10)
+rot.posazi(30)
+rot.postilt(10)
+rot.pos(230.3) # ambos eixos
 
-rot.jog("azimuth", 20)
+rot.jogazi(20)
+rot.jogtilt(33.1)
 rot.stop()
+rot.jog(22.2) # ambos eixos
 
 rot.close()
 ~~~
@@ -104,13 +102,18 @@ Importar e executar comandos manualmente:
 ~~~python
 from rotatorytable import RotTableWrapper
 
-rot = RotTableWrapper("127.0.0.1", 5020)
-rot.connect()
+rot = RotTableWrapper() # sem argumentos no construtor, usa-se o padrão, que é 127.0.0.1:5020. Veja na classe.
+
 rot.enable()
 
-rot.pos("azimuth", 45)
-rot.jog("tilt", -10)
+rot.posazi(45.4)
+rot.postitl(-10.4)
+rot.pos(22.9) # ambos eixos
 
+rot.jogazi(30.0)
+rot.jogtilt(60.0)
+rot.stop()
+rot.jog(22.4) # ambos eixos
 rot.stop()
 rot.close()
 ~~~
@@ -122,8 +125,8 @@ rot.close()
 Ordem ideal:
 
 1. Iniciar simulador (`simuladormesacomcomandos.py`)
-2. (Opcional) Iniciar interface web (`interfacemesainercial.py`)
-3. Executar script Python ou REPL
+2. (Indicado se quiser ver a simulação) Iniciar interface web (`interfacemesainercial.py`)
+3. Executar script Python ou REPL (Executar os comandos no interpretador)
 4. Enviar comandos de movimento
 5. Observar resposta no simulador
 
@@ -132,9 +135,9 @@ Ordem ideal:
 # 5. COMPORTAMENTO ESPERADO
 
 - `enable()` → libera controle da mesa
-- `pos()` → movimento absoluto com rampa
-- `jog()` → movimento contínuo por velocidade
-- `stop()` → parada imediata
+- `pos()` → movimento absoluto de ambos eixos
+- `jog()` → movimento contínuo por velocidade em ambos eixos
+- `stop()` → parada imediata de ambos eixos
 - Simulador reflete estado em tempo real
 
 ---

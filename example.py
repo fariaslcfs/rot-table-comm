@@ -9,7 +9,7 @@ Descrição:
     Infax com dois eixos (Azimuth e Tilt) via Modbus TCP.
 
 Compatibilidade:
-    Python 3.9+
+    Python 3.12.3, pymodbus 3.7.4
 """
 
 from rotatorytable import RotTableWrapper
@@ -48,7 +48,7 @@ rt = RotTableWrapper(host=SERVER_TEST, port=MODBUS_PORT_TEST)
 
 print("Habilitando controlador da mesa...")
 rt.enable()
-sleep(0.2)
+sleep(1) # Aguarda o sistema ser habilitado
 
 # =========================================================
 # 2. TESTE DE POSICIONAMENTO ABSOLUTO
@@ -56,8 +56,8 @@ sleep(0.2)
 
 print("Teste de posicionamento (Azimuth + Tilt)...")
 
-rt.pos("azimuth", 45)
-sleep(2) 
+rt.posazi(45)
+sleep(5) 
 # Aguarda o movimento ser concluído (ajuste conforme necessário)
 # Seria ideal implementar uma função de espera baseada no status do movimento, em vez de usar sleep fixo.
 # Exemplo: aguardar até que o movimento seja concluído verificando o status do eixo.
@@ -65,12 +65,12 @@ sleep(2)
 # ajustar o tempo de espera para garantir que o movimento seja concluído antes de enviar o próximo comando.
 
 
-rt.pos("tilt", 30)
-sleep(2)
+rt.postilt(30)
+sleep(5)
 
-rt.pos("azi", 0)
-rt.pos("tilt", 0)
-sleep(2)
+rt.posazi(0)
+rt.postilt(0)
+sleep(5)
 
 # =========================================================
 # 3. TESTE DE JOG (VELOCIDADE)
@@ -78,40 +78,43 @@ sleep(2)
 
 print("Teste Jog Azimuth +...")
 
-rt.jog("azi", 20)
-sleep(3)
+rt.jogazi(20) # Jog no eixo Azimuth com velocidade de 20 graus/s
+sleep(5)
 
-rt.stop()
-sleep(1)
+rt.stop() # Para interromper o movimento de jog
+sleep(5)
 
 print("Teste Jog Tilt -...")
 
-rt.jog("tilt", -15)
-sleep(3)
+rt.jogtilt(-15) # Jog no eixo Tilt com velocidade de -15 graus/s (sentido contrário)
+sleep(5)
 
-rt.stop()
+rt.stop() # Para ambos eixos (v=0)
 
 # =========================================================
 # 4. TESTE COMBINADO (DOIS EIXOS)
 # =========================================================
 
-print("Teste Jog simultâneo (Azimuth + Tilt)...")
+print("Teste Jog e Pos simultâneos (Azimuth + Tilt)...")
 
-rt.jog("both", 10)
-sleep(4)
+rt.jog(10) # ambos eixos com velocidade de 10 graus/s
+sleep(5)
 
 rt.stop()
 
-# =========================================================
-# 5. HOMING MANUAL
-# =========================================================
+rt.pos(90.0) # ambos eixos para 90 graus
+sleep(5)
+
+
+# ==============================================================
+# 5. HOMING MANUAL - retorno "para casa" ao zero mecânico lógico 
+# ==============================================================
 
 print("Retorno ao zero mecânico lógico...")
 
 sleep(5)
 
-rt.pos("azi", 0)
-sleep(3)
-rt.pos("tilt", 0)
-sleep(3)
+rt.pos(0) # ambos eixos para 0 graus
+sleep(5)
+
 print("Teste finalizado com sucesso.")

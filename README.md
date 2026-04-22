@@ -22,10 +22,17 @@ Ela encapsula:
 
 ## 2. Dependências
 
+# Windows
 ~~~
-pip install -r requirements.txt
+Python 3.12.3
+Observar a versão correta do pymodbus (3.7.4), definida no requirements.txt.
+pip install -r requirements.txt --no-cache
 ~~~
 
+# Linux Mint 22
+Python 3.12.3
+Observar a versão correta do pymodbus (3.7.4), definida no requirements.txt.
+pip install -r requirements.txt --break-system-packages --no-cache
 ---
 
 ## 3. Conceitos Importantes
@@ -36,7 +43,7 @@ O controlador da mesa utiliza registradores de 16 bits.
 Valores maiores (posição/velocidade) são armazenados em 32 bits:
 
 ~~~
-valor_32bits = HIGH << 16 | LOW
+valor (32 bits) = HIGH << 16 | LOW  (modbus é um protocolo de 16 bits)
 ~~~
 
 ---
@@ -95,14 +102,14 @@ normalize(angle):
 | 42   | Max Acc Tilt |
 | 50   | Acc Azimuth |
 | 52   | Max Acc Azimuth |
-| 46-47| Vel Tilt |         * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
-| 56-57| Vel Azimuth |      * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
-| 60-61| Target Tilt |      * Para o valor do target (posição angular de azimute), 2 registradores de 16 bits são usados | 
-| 70-71| Target Azimuth |   * Para o valor do target (posição angular de inclinação), 2 registradores de 16 bits são usados | 
-| 80   | MaxVelTitl |       * Tilt max velocity |
-| 82   | MaxAccTilt |       * Tilt max acceleration |
-| 90   | MaxVelAzi |        * Azimuth max velocity |
-| 92   | MaxAccAzi |        * Azimuth max acceleration |
+| 46-47| Vel Tilt |        * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
+| 56-57| Vel Azimuth |     * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
+| 60-61| Target Tilt |     * Para o valor do target (posição angular de azimute), 2 registradores de 16 bits são usados | 
+| 70-71| Target Azimuth |  * Para o valor do target (posição angular de inclinação), 2 registradores de 16 bits são usados | 
+| 80   | MaxVelTitl |      * Tilt max velocity |
+| 82   | MaxAccTilt |      * Tilt max acceleration |
+| 90   | MaxVelAzi |       * Azimuth max velocity |
+| 92   | MaxAccAzi |       * Azimuth max acceleration |
 ---
 
 ## 5. Classe Refatorada
@@ -334,8 +341,7 @@ class RotTableWrapper:
     
     def getvel(self):
         return self.getvelazi(), self.getveltilt()
-
-    
+        
 ~~~
 
 ---
