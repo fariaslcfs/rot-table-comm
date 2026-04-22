@@ -9,8 +9,8 @@
 ## 🔹 Holding Registers
 | Endereço 16 bits | Nome | Descrição |
 |----------|------|----------|
-| 22 | ENABLE | Habilitação geral |
-| 24 | ENABLE | Habilitação geral |
+| 22 | ENABLE | Habilitação de ambos eixos |
+| 24 | Sem função | Uso geral |
 | 28 | CMD_AZI | 0=stop, 1=+, 2=-, 4=pos |
 | 26 | CMD_TILT | 0=stop, 1=+, 2=-, 4=pos |
 | 46-47 | VEL_TILT_CMD | Velocidade Tilt |
