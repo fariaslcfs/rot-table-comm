@@ -1,4 +1,4 @@
-# RotTableWrapper (RotTableComm refatorada) — Classe de Controle da Mesa Inercial (Python 3.12+)
+# RotTableWrapper (RotTableComm refatorada) — Classe de Controle da Mesa Inercial (Python 3.12.3, pymodbus 3.7.4)
 
 Autor: Roney D. Silva e equipe EFO-S  
 
