@@ -30,6 +30,7 @@ pip install -r requirements.txt --no-cache
 ~~~
 
 # Linux Mint 22
+~~~
 Python 3.12.3
 Observar a versão correta do pymodbus (3.7.4), definida no requirements.txt.
 pip install -r requirements.txt --break-system-packages --no-cache
