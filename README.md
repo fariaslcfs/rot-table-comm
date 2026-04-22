@@ -42,9 +42,7 @@ Ela encapsula:
 O controlador da mesa utiliza registradores de 16 bits.  
 Valores maiores (posição/velocidade) são armazenados em 32 bits:
 
-~~~
-valor (32 bits) = HIGH << 16 | LOW  (modbus é um protocolo de 16 bits)
-~~~
+- valor (32 bits) = HIGH << 16 | LOW  (modbus é um protocolo de 16 bits)
 
 ---
 
@@ -62,7 +60,7 @@ valor (32 bits) = HIGH << 16 | LOW  (modbus é um protocolo de 16 bits)
 Todos os ângulos são convertidos para o intervalo:
 
 ~~~
-[0, 360000)
+[0, 360000]
 ~~~
 
 Função:
