@@ -116,7 +116,7 @@ rot.stop_all()
 sleep(5)
 
 print("Jog em ambos eixos com velocidade 90 °/s")
-rot.move_all(90.0)
+rot.jog_all(90.0)
 sleep(5)
 
 print("Para ambos eixos")
