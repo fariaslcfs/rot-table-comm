@@ -1,9 +1,9 @@
 {
-    "velPosAzimute": 60.0,
+    "velPosAzimute": 45.0,
     "accPosAzimute": 100.0,
     "maxVelAzimute": 500.0,
     "maxAccAzimute": 100.0,
-    "velPosTilt": 60.0,
+    "velPosTilt": 45.0,
     "accPosTilt": 100.0,
     "maxVelTilt": 200.0,
     "maxAccTilt": 100.0,
