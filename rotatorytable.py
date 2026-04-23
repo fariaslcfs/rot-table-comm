@@ -377,6 +377,22 @@ class RotTableWrapper:
     # UTILS
     # =====================================================
 
+    def to_int32(self, raw):
+        """
+        Converte valor 32 bits para inteiro com sinal.
+        Parameters
+        ----------
+        raw : int
+            Valor 32 bits.
+
+        Returns
+        -------
+        int : Valor com sinal.
+        """
+        if raw & 0x80000000:
+            return raw - 0x100000000
+        return raw
+
     def normalize(self, deg):
         """
         Normaliza ângulo. Evita valores negativos, convertendo para faixa [0, 360°].
@@ -424,7 +440,7 @@ class RotTableWrapper:
         Parameters
         ----------
         addr_acc : int
-        addr_maxacc2 : int  : Max Acceleration (opcional, pode ser o mesmo de addr_acc)
+        addr_maxacc : int  : Max Acceleration (opcional, pode ser o mesmo de addr_acc)
         addr_enable_roll : int : Acceleration enable ROLL (deve ser 1 para permitir movimento)
         addr_enable_yaw : int : Acceleration enable YAW (deve ser 1 para permitir movimento)
         """
@@ -446,7 +462,7 @@ class RotTableWrapper:
         Parameters
         ----------
         addr_acc : int
-        addr_maxacc2 : int  : Max Acceleration (opcional, pode ser o mesmo de addr_acc)
+        addr_maxacc : int  : Max Acceleration (opcional, pode ser o mesmo de addr_acc)
         addr_enable_roll : int : Acceleration enable ROLL (deve ser 1 para permitir movimento)
         addr_enable_yaw : int : Acceleration enable YAW (deve ser 1 para permitir movimento)
         """
@@ -481,7 +497,7 @@ class RotTableWrapper:
         direction : int : 0 = stop, 1 = positivo, 2 = negativo, 4 = modo posição
         addr_cmd : int
         """
-        self.write(addr_cmd, direction)
+        self.write(addr_cmd, direction) # trigger
 
     def set_roll_direction(self, direction, addr_cmd=26):
         """
@@ -492,7 +508,7 @@ class RotTableWrapper:
         direction : int : 0 = stop, 1 = positivo, 2 = negativo, 4 = modo posição
         addr_cmd : int
         """
-        self.write(addr_cmd, direction)
+        self.write(addr_cmd, direction) # trigger
 
     def set_yaw_velocity(self, vel, addr_vel=56):
         """
@@ -502,6 +518,10 @@ class RotTableWrapper:
         ----------
         vel : float
         addr_vel : int
+
+        Returns 
+        -------
+        int : Velocidade aplicada (após clipping e escala)
         """
         v = int(self.clip_vel_yaw(vel) * 100)
         self.write_dword(addr_vel, abs(v))
@@ -515,6 +535,11 @@ class RotTableWrapper:
         ----------
         vel : float
         addr_vel : int
+
+        Returns
+        -------
+        int : Velocidade aplicada (após clipping e escala)
+
         """
         v = int(self.clip_vel_roll(vel) * 100)
         self.write_dword(addr_vel, abs(v))
@@ -563,7 +588,7 @@ class RotTableWrapper:
         self.write(addr_enable, 2)
 
     # =====================================================
-    # JOG
+    # JOG - VELOCIDADE CONTÍNUA
     # =====================================================
 
     def jog_yaw(self, vel):
@@ -578,11 +603,11 @@ class RotTableWrapper:
         v = self.set_yaw_velocity(vel)
 
         if v > 0:
-            self.set_yaw_direction(1) # positivo
+            self.set_yaw_direction(1) # trigger modo jog sentido positivo
         elif v < 0:
-            self.set_yaw_direction(2) # negativo
+            self.set_yaw_direction(2) # trigger modo jog sentido negativo
         else:
-            self.set_yaw_direction(0) # stop
+            self.set_yaw_direction(0) # trigger stop
 
     def jog_roll(self, vel):
         """
@@ -596,11 +621,11 @@ class RotTableWrapper:
         v = self.set_roll_velocity(vel)
 
         if v > 0:
-            self.set_roll_direction(1) # positivo
+            self.set_roll_direction(1) # trigger modo jog sentido positivo
         elif v < 0:
-            self.set_roll_direction(2) # negativo
+            self.set_roll_direction(2) # trigger modo jog sentido negativo
         else:
-            self.set_roll_direction(0) # stop
+            self.set_roll_direction(0) # trigger modo jog stop
 
     def jog_all(self, vel):
         """
@@ -619,7 +644,7 @@ class RotTableWrapper:
         self.set_roll_direction(1 if v_roll > 0 else 2 if v_roll < 0 else 0)
 
     # =====================================================
-    # MOVE
+    # MOVE - POSICIONAMENTO ABSOLUTO
     # =====================================================
 
     def move_yaw(self, angle):
@@ -637,7 +662,7 @@ class RotTableWrapper:
         self.set_yaw_position(angle)
 
         time.sleep(0.02)
-        self.set_yaw_direction(4)
+        self.set_yaw_direction(4) # trigger modo posição
 
     def move_roll(self, angle):
         """
@@ -654,7 +679,7 @@ class RotTableWrapper:
         self.set_roll_position(angle)
 
         time.sleep(0.02)
-        self.set_roll_direction(4)
+        self.set_roll_direction(4) # trigger modo posição
 
     def move_all(self, angle):
         """
@@ -677,8 +702,8 @@ class RotTableWrapper:
 
         time.sleep(0.02)
 
-        self.set_yaw_direction(4)
-        self.set_roll_direction(4)
+        self.set_yaw_direction(4) # trigger modo posição
+        self.set_roll_direction(4) # trigger modo posição
 
     # =====================================================
     # STOP
@@ -692,7 +717,7 @@ class RotTableWrapper:
         ----------
         None
         """
-        self.set_yaw_direction(0)
+        self.set_yaw_direction(0) # trigger stop
 
     def stop_roll(self):
         """
@@ -702,7 +727,7 @@ class RotTableWrapper:
         ----------
         None
         """
-        self.set_roll_direction(0)
+        self.set_roll_direction(0) # trigger stop
 
     def stop_all(self):
         """
@@ -712,8 +737,8 @@ class RotTableWrapper:
         ----------
         None
         """
-        self.stop_yaw()
-        self.stop_roll()
+        self.stop_yaw() # trigger stop yaw
+        self.stop_roll() # trigger stop roll
 
     # =====================================================
     # EMERGENCY
@@ -747,29 +772,53 @@ class RotTableWrapper:
     # FEEDBACK
     # =====================================================
 
-    def get_yaw(self, addr=0):
+    def get_pos_yaw(self, addr=0):
         """
         Lê posição YAW.
 
         Parameters
         ----------
         addr : int : Em graus, convertido de valor 32 bits (2 registradores) usando escala valor / 1_000_000
-        """
-        raw = self.read_dword(addr)
-        return None if raw is None else raw / 1_000_000
 
-    def get_roll(self, addr=4):
+        rr = self.client.read_input_registers(address=0, count=2)
+        raw = (rr.registers[1] << 16) | rr.registers[0]
+        Lê os registradores de entrada para o eixo YAW, combinando os valores de dois registradores (MSB e LSB) 
+        para formar um valor de 32 bits. A conversão para um valor com sinal é feita usando a função to_int32, e
+        o resultado é escalado para graus dividindo por 1_000_000. Se a leitura falhar, retorna None.
+
+        Returns
+        -------
+        float : Posição YAW em graus, ou None em caso de erro.
+        """
+        rr = self.client.read_input_registers(address=0, count=2)
+        raw = (rr.registers[1] << 16) | rr.registers[0]
+        pos_yaw = self.to_int32(raw) / 1_000_000
+        return None if raw is None else pos_yaw
+
+    def get_pos_roll(self, addr=4):
         """
         Lê posição ROLL.
 
         Parameters
         ----------
         addr : int : Em graus, convertido de valor 32 bits (2 registradores) usando escala valor / 1_000_000
-        """
-        raw = self.read_dword(addr)
-        return None if raw is None else raw / 1_000_000
 
-    def get_all(self, addr_yaw=0, addr_roll=4):
+        rr = self.client.read_input_registers(address=4, count=2)
+        raw = (rr.registers[1] << 16) | rr.registers[0]
+        Lê os registradores de entrada para o eixo ROLL, combinando os valores de dois registradores (MSB e LSB) 
+        para formar um valor de 32 bits. A conversão para um valor com sinal é feita usando a função to_int32, e
+        o resultado é escalado para graus dividindo por 1_000_000. Se a leitura falhar, retorna None.
+        
+        Returns
+        -------
+        float : Posição ROLL em graus, ou None em caso de erro.
+        """
+        rr = self.client.read_input_registers(address=4, count=2)
+        raw = (rr.registers[1] << 16) | rr.registers[0]
+        pos_roll = self.to_int32(raw) / 1_000_000
+        return None if raw is None else pos_roll
+
+    def get_pos_all(self, addr_yaw=0, addr_roll=4):
 
         """
         Lê simultaneamente as posições dos eixos YAW e ROLL.
@@ -792,7 +841,80 @@ class RotTableWrapper:
         - Conversão aplicada: valor / 1_000_000.
         - Em caso de erro, retorna None no respectivo eixo.
         """
-        yaw = self.get_yaw(addr_yaw)
-        roll = self.get_roll(addr_roll)
+        yaw = self.get_pos_yaw(addr_yaw)
+        roll = self.get_pos_roll(addr_roll)
         return yaw, roll
+    
+    def get_vel_yaw(self, addr=2):
+        """
+        Lê velocidade YAW.
+
+        Parameters
+        ----------
+        addr : int : Em °/s, convertido de valor 32 bits (2 registradores) usando escala valor / 1000_1000
+
+        rr = self.client.read_input_registers(address=2, count=2)
+        raw = (rr.registers[1] << 16) | rr.registers[0]
+        Lê os registradores de entrada para o eixo YAW, combinando os valores de dois registradores (MSB e LSB) 
+        para formar um valor de 32 bits. A conversão para um valor com sinal é feita usando a função to_int32, e
+        o resultado é escalado para graus dividindo por 1_000_000. Se a leitura falhar, retorna None.
+
+        Returns
+        -------
+        float : Velocidade YAW em °/s, ou None em caso de erro.
+        """
+        rr = self.client.read_input_registers(address=2, count=2)
+        raw = (rr.registers[1] << 16) | rr.registers[0]
+        vel_yaw = self.to_int32(raw) / 1_000_000
+        return None if raw is None else vel_yaw
+
+    def get_vel_roll(self, addr=6):
+        """
+        Lê velocidade ROLL.
+
+        Parameters
+        ----------
+        addr : int : Em °/s, convertido de valor 32 bits (2 registradores) usando escala valor / 1000_000
+
+        rr = self.client.read_input_registers(address=6, count=2)
+        raw = (rr.registers[1] << 16) | rr.registers[0]
+        Lê os registradores de entrada para o eixo ROLL, combinando os valores de dois registradores (MSB e LSB) 
+        para formar um valor de 32 bits. A conversão para um valor com sinal é feita usando a função to_int32, e
+        o resultado é escalado para graus dividindo por 1_000_000. Se a leitura falhar, retorna None.
+        
+        Returns
+        -------
+        float : Velocidade ROLL em °/s, ou None em caso de erro.
+        """
+        rr = self.client.read_input_registers(address=6, count=2)
+        raw = (rr.registers[1] << 16) | rr.registers[0]
+        vel_roll = self.to_int32(raw) / 1_000_000
+        return None if raw is None else vel_roll
+
+    def get_vel_all(self, addr_yaw=2, addr_roll=6):
+
+        """
+        Lê simultaneamente as velocidades dos eixos YAW e ROLL.
+
+        Parameters
+        ----------
+        addr_yaw : int
+            Endereço base (LSB) do eixo YAW.
+        addr_roll : int
+            Endereço base (LSB) do eixo ROLL.
+
+        Returns
+        -------
+        tuple
+            (vel_yaw, vel_roll) em °/s.
+
+        Notes
+        -----
+        - Cada eixo é lido como valor de 32 bits (2 registradores).
+        - Conversão aplicada: valor / 100.
+        - Em caso de erro, retorna None no respectivo eixo.
+        """
+        vel_yaw = self.get_vel_yaw(addr_yaw)
+        vel_roll = self.get_vel_roll(addr_roll)
+        return vel_yaw, vel_roll
     
