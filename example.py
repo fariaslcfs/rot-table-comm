@@ -6,7 +6,7 @@
 
 Descrição:
     Exemplo de uso da classe RotTableComm para controle da mesa inercial
-    com dois eixos (Azimuth e Tilt) via Modbus TCP.
+    com dois eixos (Yaw e Roll) via Modbus TCP.
 
 Compatibilidade:
     Python 3.12.3, pymodbus 3.7.4

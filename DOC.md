@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Este documento descreve a interface de controle da mesa inercial de 2 eixos (Azimuth e Tilt) utilizada no IEAv, operando via protocolo **Modbus TCP**.
+Este documento descreve a interface de controle da mesa inercial de 2 eixos (Yaw e Roll) utilizada no IEAv, operando via protocolo **Modbus TCP**.
 
 A abordagem substitui o sistema original em C (com dependência de compilação, Mongoose server e frontend JS) por uma solução direta em Python, simplificando manutenção, testes e integração.
 
@@ -33,10 +33,10 @@ A abordagem substitui o sistema original em C (com dependência de compilação,
 | Endereço | Função | Descrição |
 |----------|--------|-----------|
 | 20 | Emergency Stop | 4 = stop imediato / 0 = reset |
-| 22 | Enable Tilt | 0 off / 1 on / 2 reverse |
-| 24 | Enable Azimuth | 0 off / 1 on / 2 reverse |
-| 26 | Tilt Command | 0 stop / 1 forward / 2 reverse / 4 mode pos |
-| 28 | Azimuth Command | 0 stop / 1 forward / 2 reverse / 4 mode pos |
+| 22 | Enable Roll | 0 off / 1 on / 2 reverse |
+| 24 | Enable Yaw | 0 off / 1 on / 2 reverse |
+| 26 | Roll Command | 0 stop / 1 forward / 2 reverse / 4 mode pos |
+| 28 | Yaw Command | 0 stop / 1 forward / 2 reverse / 4 mode pos |
 
 ---
 
@@ -44,12 +44,12 @@ A abordagem substitui o sistema original em C (com dependência de compilação,
 
 | Endereço | Função |
 |----------|--------|
-| 40 | Tilt acceleration |
-| 42 | Tilt max acceleration |
-| 50 | Azimuth acceleration |
-| 52 | Azimuth max acceleration |
-| 60 | Tilt position (LOW/HIGH 32-bit) |
-| 70 | Azimuth position (LOW/HIGH 32-bit) |
+| 40 | Roll acceleration |
+| 42 | Roll max acceleration |
+| 50 | Yaw acceleration |
+| 52 | Yaw max acceleration |
+| 60 | Roll position (LOW/HIGH 32-bit) |
+| 70 | Yaw position (LOW/HIGH 32-bit) |
 
 ---
 
@@ -57,8 +57,8 @@ A abordagem substitui o sistema original em C (com dependência de compilação,
 
 | Endereço | Função |             Observação               |
 |----------|--------|--------------------------------------|
-| 46 e 47| Tilt velocity (16-bit) | Somente 46 usado |
-| 56 e 56| Azimuth velocity (16-bit) | Somente 56 usado |
+| 46 e 47| Roll velocity (16-bit) | Somente 46 usado |
+| 56 e 56| Yaw velocity (16-bit) | Somente 56 usado |
 
 ---
 
@@ -66,15 +66,15 @@ A abordagem substitui o sistema original em C (com dependência de compilação,
 
 | Endereço | Função |
 |----------|--------|
-| 62 | Tilt velocity position |
-| 64 | Tilt acceleration position |
-| 72 | Azimuth velocity position |
-| 74 | Azimuth acceleration position |
-| 76 | Azimuth acceleration (extra) |
-| 80 | Tilt max velocity |
-| 82 | Tilt max acceleration |
-| 90 | Azimuth max velocity |
-| 92 | Azimuth max acceleration |
+| 62 | Roll velocity position |
+| 64 | Roll acceleration position |
+| 72 | Yaw velocity position |
+| 74 | Yaw acceleration position |
+| 76 | Yaw acceleration (extra) |
+| 80 | Roll max velocity |
+| 82 | Roll max acceleration |
+| 90 | Yaw max velocity |
+| 92 | Yaw max acceleration |
 
 ---
 
@@ -85,20 +85,20 @@ A abordagem substitui o sistema original em C (com dependência de compilação,
 Para garantir operação correta do controlador da mesa:
 
 1. Habilitar eixo:
-   - Tilt: `22 = 2`
-   - Azimuth: `24 = 2`
+   - Roll: `22 = 2`
+   - Yaw: `24 = 2`
 
 2. Reset comando:
-   - `26 = 0` (Tilt)
-   - `28 = 0` (Azimuth)
+   - `26 = 0` (Roll)
+   - `28 = 0` (Yaw)
 
 3. Enviar posição (32 bits split)
 
 4. Configurar aceleração
 
 5. Ativar modo posição:
-   - `26 = 4` (Tilt)
-   - `28 = 4` (Azimuth)
+   - `26 = 4` (Roll)
+   - `28 = 4` (Yaw)
 
 ---
 
@@ -113,8 +113,8 @@ Para garantir operação correta do controlador da mesa:
    - `52 = 10000`
 
 2. Envio de velocidade:
-   - Tilt: `46` (×100)
-   - Azimuth: `56` (×100)
+   - Roll: `46` (×100)
+   - Yaw: `56` (×100)
 
 3. Direção:
    - 0 = stop
@@ -163,8 +163,8 @@ Resultado:
 
 ## Convenções físicas
 
-- Azimuth = eixo horizontal (yaw)
-- Tilt = eixo vertical (pitch)
+- Yaw = eixo horizontal (yaw)
+- Roll = eixo vertical (pitch)
 - Posição: graus × 1000
 - Velocidade: graus/s × 100
 

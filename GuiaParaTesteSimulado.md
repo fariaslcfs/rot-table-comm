@@ -66,30 +66,11 @@ E executar:
 python example.py
 ~~~
 
-Dentro do script, utilizar a classe:
-
-~~~python
-from rotatorytable import RotTableWrapper
-
-rot = RotTableWrapper() # sem argumentos no construtor, usa-se o padrão, que é 127.0.0.1:5020. Veja na classe.
-
-rot.enable()
-
-rot.posazi(30)
-rot.postilt(10)
-rot.pos(230.3) # ambos eixos
-
-rot.jogazi(20)
-rot.jogtilt(33.1)
-rot.stop()
-rot.jog(22.2) # ambos eixos
-
-rot.close()
-~~~
-
 ---
 
 ## 3.2 MODO INTERPRETADOR (REPL)
+
+REPL (Read-Eval-Print Loop), ou seja, dentro do Python (linha de comandos do intepretador interativo do Python):
 
 Abrir o Python diretamente:
 
@@ -102,20 +83,84 @@ Importar e executar comandos manualmente:
 ~~~python
 from rotatorytable import RotTableWrapper
 
-rot = RotTableWrapper() # sem argumentos no construtor, usa-se o padrão, que é 127.0.0.1:5020. Veja na classe.
+rot = RotTableWrapper("127.0.0.1", 5020)
 
-rot.enable()
+rot.move_yaw(45)
 
-rot.posazi(45.4)
-rot.postitl(-10.4)
-rot.pos(22.9) # ambos eixos
+pos = rot.get_pos_yaw()
 
-rot.jogazi(30.0)
-rot.jogtilt(60.0)
-rot.stop()
-rot.jog(22.4) # ambos eixos
-rot.stop()
-rot.close()
+rot.move_roll(30)
+
+pos = rot.get_pos_roll()
+
+rot.move_yaw(0)
+
+rot.move_roll(0)
+
+pos_yaw = rot.get_pos_yaw()
+
+pos_roll = rot.get_pos_roll()
+
+rot.jog_yaw(20)
+
+vel = rot.get_vel_yaw()
+
+rot.stop_yaw()
+
+vel = rot.get_vel_yaw()
+
+rot.jog_roll(-15)
+
+vel = rot.get_vel_roll()
+
+rot.stop_roll()
+
+vel = rot.get_vel_roll()
+
+rot.jog_yaw(-30)
+
+vel = rot.get_vel_yaw()
+
+rot.jog_roll(0)
+
+rot.jog_roll(20)
+
+vel = rot.get_vel_roll()
+
+rot.stop_all()
+
+vel_yaw = rot.get_vel_yaw()
+
+vel_roll = rot.get_vel_roll()
+
+rot.jog_all(10)
+
+vel_yaw = rot.get_vel_yaw()
+
+vel_roll = rot.get_vel_roll()
+
+rot.stop_all()
+
+vel_yaw = rot.get_vel_yaw()
+
+vel_roll = rot.get_vel_roll()
+
+rot.jog_all(90.0)
+
+vel_all = rot.get_vel_all()
+
+rot.stop_all()
+
+vel_yaw = rot.get_vel_yaw()
+
+vel_roll = rot.get_vel_roll()
+
+rot.move_all(0)
+
+pos_yaw = rot.get_pos_yaw()
+
+pos_roll = rot.get_pos_roll()
+
 ~~~
 
 ---
@@ -132,17 +177,8 @@ Ordem ideal:
 
 ---
 
-# 5. COMPORTAMENTO ESPERADO
 
-- `enable()` → libera controle da mesa
-- `pos()` → movimento absoluto de ambos eixos
-- `jog()` → movimento contínuo por velocidade em ambos eixos
-- `stop()` → parada imediata de ambos eixos
-- Simulador reflete estado em tempo real
-
----
-
-# 6. OBSERVAÇÕES IMPORTANTES
+# 5. OBSERVAÇÕES IMPORTANTES
 
 - O simulador substitui o hardware real da mesa
 - O arquivo `mesa_config.json` define o estado inicial
@@ -157,7 +193,7 @@ Ordem ideal:
 
 ---
 
-# 7. OBJETIVO DO TESTE
+# 6. OBJETIVO DO TESTE
 
 Validar:
 

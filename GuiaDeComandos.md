@@ -1,150 +1,442 @@
-# RotTableWrapper— Guia Rápido (Cheat Sheet)
+# RotTableWrapper — Guia Expandido com Fluxogramas
 
-> Controle da mesa inercial IEAv (Azimuth + Tilt) via Modbus TCP  
-> Uso direto para testes e scripts simples
-
----
-
-# 1. INICIALIZAÇÃO
-
-~~~
-Real
- - RotTableWrapper(host="192.168.1.1", port=502)
-
-Com simulador
- - RotTableWrapper(host="127.0.0.1", port=5020)
-~~~
-
-Cria interface com a mesa ou simulador.
+> Controle da mesa inercial IEAv (Yaw + Roll) via Modbus TCP  
+> Inclui fluxos completos de execução (command flow)
 
 ---
 
-# 2. CONEXÃO
+# 1. VISÃO GERAL
 
-~~~
-connect()
-~~~
-Abre comunicação Modbus TCP.
+A arquitetura de controle segue um padrão determinístico baseado em sequência:
 
-~~~
-close()
-~~~
-Encerra comunicação.
+```
+PREPARE → MODE → WRITE → DELAY → TRIGGER
+```
 
----
-
-# 3. HABILITAR / PARAR
-
-~~~
-enable()
-~~~
-Ativa Azimuth + Tilt.
-
-~~~
-disable()
-~~~
-Desativa sistema.
-
-~~~
-stop()
-~~~
-Para todos os movimentos imediatamente.
+Aplicado a:
+- Movimento absoluto (MOVE)
+- Movimento contínuo (JOG)
+- Leitura (READ)
+- Parada (STOP)
 
 ---
 
-# 4. POSIÇÃO (ABSOLUTA)
+# 2. FLUXO GLOBAL
 
-~~~
-posazi(angulo)
-postilt(angulo)
-pos(angulo)
-~~~
-
-Exemplo:
-- posazi(45) → move Azimuth para 45°
-- postilt(10) → move Tilt para 10°
-- pos(22.4) → move ambos eixos para 22.4 °
-- pos(0.0) → move ambos eixos para 0.0 °
-
----
-
-# 5. JOG (VELOCIDADE)
-
-~~~
-jogazi(velocidade)
-jogtilt(velocidade)
-jog.stop()
-jog(velocidade)
-jog.stop()
-~~~
-
-Exemplo:
-- jogazi(20) → inicia o giro contínuo do eixo Azi com velocidade de  20 °/s (girando no sentido positivo)
-- jogtilt(-15) → inicia o giro contínuo do eixo Tilt com velocidade de 15 °/s (girando no sentido negativo)
-- jog(45.5) → inicia o giro contínuo de ambos eixos com velocidade de 45.5 °/s (girando no sentido positivo)
+```
+                ┌──────────────┐
+                │   INÍCIO     │
+                └──────┬───────┘
+                       │
+                       ▼
+                ┌──────────────┐
+                │   PREPARE    │
+                └──────┬───────┘
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+        ▼              ▼              ▼
+     MOVE            JOG            READ
+        │              │              │
+        ▼              ▼              ▼
+   TRIGGER         DIREÇÃO        RETURN
+        │              │
+        └──────┬───────┘
+               ▼
+           STOP (opcional)
+```
 
 ---
 
-# 6. LEITURA (FEEDBACK)
+# 3. PREPARAÇÃO (BASE DE TUDO)
 
-~~~
-getposazi()
-~~~
-Retorna posição atual do Azimuth (graus)
+Executado implicitamente em:
+- move_*
+- jog_*
 
-~~~
-getpostilt()
-~~~
-Retorna posição atual do Tilt (graus)
+```
+prepare_yaw_motion() / prepare_roll_motion()
 
-~~~
-getpos()
-~~~
-Retorna posição atual de ambos eixos AZI e Tilt (graus)
+write(acc)
+write(max_acc)
 
+write(enable_roll = 1)
+delay(0.1)   ⚠️ obrigatório
+
+write(enable_yaw = 1)
+delay(0.1)   ⚠️ obrigatório
+```
+
+Fluxograma:
+
+```
+[START]
+   │
+   ▼
+write ACC
+   │
+write MAX_ACC
+   │
+write ENABLE ROLL
+   │
+delay 0.1s
+   │
+write ENABLE YAW
+   │
+delay 0.1s
+   │
+   ▼
+[READY]
+```
 
 ---
 
-# 7. REGRAS IMPORTANTES
+# 4. MOVE (POSICIONAMENTO ABSOLUTO)
 
-- Valores de posição: graus
-- Velocidade: graus/s
-- Controle usa Modbus TCP
-- Sempre chamar `enable()` antes de mover
-- Usar `stop()` para interromper movimento
+## 4.1 YAW
+
+```
+move_yaw(angle)
+```
+
+Fluxo:
+
+```
+PREPARE
+   │
+   ▼
+SET MODE (posição)
+   │
+   ▼
+STOP (direção = 0)
+   │
+   ▼
+WRITE POSITION
+   │
+   ▼
+DELAY 0.02s
+   │
+   ▼
+TRIGGER (4)
+```
+
+Fluxograma:
+
+```
+[START]
+   │
+   ▼
+prepare_yaw_motion
+   │
+   ▼
+set_position_mode_yaw
+   │
+   ▼
+set_yaw_direction(0)
+   │
+   ▼
+set_yaw_position(angle)
+   │
+   ▼
+delay 0.02s
+   │
+   ▼
+set_yaw_direction(4)
+   │
+   ▼
+[END]
+```
 
 ---
 
-# 8. EXEMPLO MÍNIMO
+## 4.2 ROLL
 
-~~~
+```
+move_roll(angle)
+```
+
+Fluxo idêntico ao Yaw:
+
+```
+prepare → mode → stop → write → delay → trigger
+```
+
+---
+
+## 4.3 MOVIMENTO SIMULTÂNEO
+
+```
+move_all(angle)
+```
+
+Fluxo:
+
+```
+prepare_all
+   │
+set mode yaw + roll
+   │
+stop ambos
+   │
+write posição yaw + roll
+   │
+delay
+   │
+trigger yaw + roll
+```
+
+Fluxograma:
+
+```
+[START]
+   │
+   ▼
+prepare_all_motion
+   │
+   ▼
+set_position_mode_yaw
+set_position_mode_roll
+   │
+   ▼
+set_yaw_direction(0)
+set_roll_direction(0)
+   │
+   ▼
+set_yaw_position(angle)
+set_roll_position(angle)
+   │
+   ▼
+delay 0.02s
+   │
+   ▼
+trigger yaw (4)
+trigger roll (4)
+   │
+   ▼
+[END]
+```
+
+---
+
+# 5. JOG (VELOCIDADE CONTÍNUA)
+
+## 5.1 YAW
+
+```
+jog_yaw(vel)
+```
+
+Fluxo:
+
+```
+prepare
+   │
+write velocity
+   │
+define direção:
+    vel > 0 → 1
+    vel < 0 → 2
+    vel = 0 → 0
+```
+
+Fluxograma:
+
+```
+[START]
+   │
+   ▼
+prepare_yaw_motion
+   │
+   ▼
+set_yaw_velocity(vel)
+   │
+   ▼
+   ┌───────────────┬───────────────┬───────────────┐
+   ▼               ▼               ▼
+vel > 0         vel < 0         vel = 0
+   │               │               │
+   ▼               ▼               ▼
+dir = 1         dir = 2         dir = 0
+   │               │               │
+   └───────┬───────┴───────┬───────┘
+           ▼               ▼
+     set_yaw_direction
+           │
+           ▼
+         [END]
+```
+
+---
+
+## 5.2 ROLL
+
+Mesma lógica do Yaw com registradores próprios.
+
+---
+
+## 5.3 JOG SIMULTÂNEO
+
+```
+jog_all(vel)
+```
+
+Fluxo:
+
+```
+prepare_all
+   │
+write vel yaw + roll
+   │
+direção independente por eixo
+```
+
+---
+
+# 6. STOP
+
+```
+stop_yaw()
+stop_roll()
+stop_all()
+```
+
+Fluxo:
+
+```
+write(direction = 0)
+```
+
+Fluxograma:
+
+```
+[ANY STATE]
+     │
+     ▼
+set_direction(0)
+     │
+     ▼
+[STOPPED]
+```
+
+---
+
+# 7. LEITURA (FEEDBACK)
+
+## 7.1 POSIÇÃO
+
+```
+get_pos_yaw()
+get_pos_roll()
+get_pos_all()
+```
+
+Fluxo:
+
+```
+read_input
+   │
+combine MSB + LSB
+   │
+to_int32
+   │
+scale (/1_000_000)
+   │
+return
+```
+
+Fluxograma:
+
+```
+[START]
+   │
+   ▼
+read_input_registers
+   │
+   ▼
+combine 32-bit
+   │
+   ▼
+convert signed
+   │
+   ▼
+scale
+   │
+   ▼
+return value
+```
+
+---
+
+## 7.2 VELOCIDADE
+
+Mesmo fluxo da posição.
+
+---
+
+# 8. EMERGÊNCIA
+
+```
+emergency_stop()
+reset_emergency()
+```
+
+Fluxo:
+
+```
+write(20, X)
+delay 0.2
+write(20, 0)
+```
+
+---
+
+# 9. MATRIZ DE COMANDOS
+
+| Tipo | Sequência |
+|------|----------|
+| MOVE | prepare → mode → stop → write → delay → trigger |
+| JOG  | prepare → velocity → direction |
+| READ | read → convert → return |
+| STOP | direction = 0 |
+| EMERGÊNCIA | write → delay → reset |
+
+---
+
+# 10. PRINCÍPIOS CRÍTICOS
+
+- Sistema é **sequencial e determinístico**
+- Delays são **obrigatórios (não remover)**
+- Cada comando é **atômico**
+- STOP não cancela posição, apenas direção
+- *_all garante sincronização entre eixos
+
+---
+
+# 11. EXEMPLO COMPLETO
+
+```
 rot = RotTableWrapper("127.0.0.1", 5020)
 
 rot.connect()
-rot.enable()
 
-rot.posazi(30)
-rot.postilt(10)
-rot.pos(90.3)
+# MOVE
+rot.move_yaw(30)
+rot.move_roll(15)
 
-rot.jogazi(30)
-rot.jogtilt(22)
-rot.jog(44)
+# JOG
+rot.jog_all(20)
 
-rot.stop()
+# STOP
+rot.stop_all()
+
+# LEITURA
+yaw, roll = rot.get_pos_all()
+
+# EMERGÊNCIA
+rot.emergency_stop()
+rot.reset_emergency()
+
 rot.close()
-~~~
-
----
-
-# 9. RESUMO
-
-| Ação | Função |
-|------|--------|
-| Habilitar | enable() |
-| Parar | stop() |
-| Posicionar | pos(axis, angle) |
-| Girar | jog(axis, velocity) |
-| Ler posição | get_azimuth(), get_tilt() |
+```
 
 ---

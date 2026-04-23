@@ -6,7 +6,7 @@ Autor: Roney D. Silva e equipe EFO-S
 
 ## 1. Visão Geral
 
-A classe `RotTableWrapper` fornece uma interface de alto nível para controle de uma mesa inercial de dois eixos (**Azimuth** e **Tilt**) via protocolo **Modbus TCP**.
+A classe `RotTableWrapper` fornece uma interface de alto nível para controle de uma mesa inercial de dois eixos (**Yaw** e **Roll**) via protocolo **Modbus TCP**.
 
 Ela encapsula:
 
@@ -81,10 +81,10 @@ normalize(angle):
 
 | Addr | Eixo   | Descrição |
 |------|--------|----------|
-| 0-1  | Azimuth | Posição |
-| 2-3  | Azimuth | Velocidade |
-| 4-5  | Tilt    | Posição |
-| 6-7  | Tilt    | Velocidade |
+| 0-1  | Yaw | Posição |
+| 2-3  | Yaw | Velocidade |
+| 4-5  | Roll    | Posição |
+| 6-7  | Roll    | Velocidade |
 
 ---
 
@@ -92,22 +92,22 @@ normalize(angle):
 
 | Addr | Função | Observação |             
 |------|--------|------------|
-| 22   | Enable Tilt |
-| 24   | Enable Azimuth |
-| 26   | CMD Tilt |
-| 28   | CMD Azimuth |
-| 40   | Acc Tilt |
-| 42   | Max Acc Tilt |
-| 50   | Acc Azimuth |
-| 52   | Max Acc Azimuth |
-| 46-47| Vel Tilt |        * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
-| 56-57| Vel Azimuth |     * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
-| 60-61| Target Tilt |     * Para o valor do target (posição angular de azimute), 2 registradores de 16 bits são usados | 
-| 70-71| Target Azimuth |  * Para o valor do target (posição angular de inclinação), 2 registradores de 16 bits são usados | 
-| 80   | MaxVelTitl |      * Tilt max velocity |
-| 82   | MaxAccTilt |      * Tilt max acceleration |
-| 90   | MaxVelAzi |       * Azimuth max velocity |
-| 92   | MaxAccAzi |       * Azimuth max acceleration |
+| 22   | Enable Roll |
+| 24   | Enable Yaw |
+| 26   | CMD Roll |
+| 28   | CMD Yaw |
+| 40   | Acc Roll |
+| 42   | Max Acc Roll |
+| 50   | Acc Yaw |
+| 52   | Max Acc Yaw |
+| 46-47| Vel Roll |        * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
+| 56-57| Vel Yaw |     * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
+| 60-61| Target Roll |     * Para o valor do target (posição angular de roll), 2 registradores de 16 bits são usados | 
+| 70-71| Target Yaw |  * Para o valor do target (posição angular de yaw), 2 registradores de 16 bits são usados | 
+| 80   | MaxVelRoll |      * Roll max velocity |
+| 82   | MaxAccRoll |      * Roll max acceleration |
+| 90   | MaxVelYaw |       * Yaw max velocity |
+| 92   | MaxAccYaw |       * Yaw max acceleration |
 ---
 
 ## 5. Arquivo rotatorytable.py Refatorado
@@ -1053,7 +1053,7 @@ class RotTableWrapper:
   2. Reset comando
   3. Escrita de posição/velocidade
   4. Start comando
-- Azimuth e Tilt são independentes, mas compartilham o mesmo barramento lógico
+- Yaw e Roll são independentes, mas compartilham o mesmo barramento lógico
 - Falha em sequência pode gerar comportamento indeterminado no movimento
 
 ---
