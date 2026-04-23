@@ -115,14 +115,7 @@ normalize(angle):
 ~~~
 from pymodbus.client import ModbusTcpClient
 import time
-
-SERVER_PROD = "192.168.1.1"    # Mesa real
-MODBUS_PORT = 502              # Porta padrão Modbus TCP  
-SERVER_TEST = "127.0.0.1"      # Simulador local. Lembre-se de iniciar o simulador antes de executar este script.
-MODBUS_PORT_TEST = 5020        # Evita conflito com porta 502 (well-known)
-
-from pymodbus.client import ModbusTcpClient
-import time
+import json
 
 
 SERVER_PROD = "192.168.1.1"
@@ -130,6 +123,8 @@ MODBUS_PORT_PROD = 502
 
 SERVER_TEST = "127.0.0.1"
 MODBUS_PORT_TEST = 5020
+
+CONFIG_FILE = "mesa_config.json"
 
 
 class RotTableWrapper:
@@ -177,8 +172,8 @@ class RotTableWrapper:
     --------------------------------------------------------------------
     prepare_yaw_motion() / prepare_roll_motion()
 
-        write(addr_acc, acc_reg_value)
-        write(addr_maxacc, acc_reg_value)
+        write(addr_acc, acceleration_reg_value)
+        write(addr_maxacc, max_acceleration_reg_value)
 
         write(22, 1)                # enable roll
         delay(0.1)                 ⚠️ CRÍTICO
@@ -387,11 +382,38 @@ class RotTableWrapper:
         """
         self.client = ModbusTcpClient(host=host, port=port)
 
-        self.max_vel_yaw = 500.0  # °/s 
-        self.max_vel_roll = 200.0 # °/s
+        """ Configurações iniciais (valores padrão) - podem ser alterados antes de aplicar com set_config()
+            depois de usar os métodos individuais para alterar os valores, ou diretamente editando os atributos públicos, é necessário chamar set_config() para aplicar as mudanças e salvar a configuração atualizada no arquivo JSON.
+        """
 
-        self.acc_value = 100.0 # °/s²
-        self.max_acc_reg_value = int(self.acc_value * 100)
+        # Fator de escala para conversão de unidades 
+        # (ajustado para refletir a escala real usada nos registradores)
+        self.FACTOR = 100
+
+        # Configuração Padrão da Mesa Inercial
+        self.yaw_acceleration_value = int(100.0) # °/s²
+        self.roll_acceleration_value = int(100.0) # °/s²
+        self.yaw_max_acceleration_value = int(100.0) # °/s²
+        self.roll_max_acceleration_value = int(100.0) # °/s²
+        self.yaw_move_velocity_value = int(77.0) # °/s
+        self.roll_move_velocity_value = int(30.0) # °/s
+        self.yaw_move_max_velocity_value = int(500.0) # °/s
+        self.roll_move_max_velocity_value = int(200.0) # °/s
+
+        print(f"Dejesa salvar a configuração padrão da mesa no arquivo mesa_config.? (s/N)")
+        choice = input().strip().lower()
+        if choice == '':
+            choice = 'n'
+        if choice == "s":
+            self.save_configToFile()
+        
+        print(f"CONFIGURAÇÃO ATUAL DA MESA INERCIAL\nYAW_ACC={self.yaw_acceleration_value:.2f} °/s²\nROLL_ACC={self.roll_acceleration_value:.2f} °/s²\nYAW_MAX_ACC={self.yaw_max_acceleration_value:.2f} °/s²\nROLL_MAX_ACC={self.roll_max_acceleration_value:.2f} °/s²\nYAW_MOVE_VEL={self.yaw_move_velocity_value:.2f} °/s\nROLL_MOVE_VEL={self.roll_move_velocity_value:.2f} °/s\nYAW_MAX_VEL={self.yaw_move_max_velocity_value:.2f} °/s\nROLL_MAX_VEL={self.roll_move_max_velocity_value:.2f} °/s  ")
+        print(f"Deseja enviar a configuração atual para a mesa? (s/N)")
+        choice = input().strip().lower()
+        if choice == '':
+            choice = 'n'
+        if choice == "s":
+            self.apply_configToTable()
 
     # =====================================================
     # CONNECTION
@@ -516,6 +538,110 @@ class RotTableWrapper:
             return raw - 0x100000000
         return raw
 
+    def set_config(self):
+        """
+        Aplica configurações de movimentos da mesa.
+        Obs.: Sem estes comandos: os registradores
+              são alterados, mas a configuração não é aplicada:
+            self.write(20, 2)
+            time.sleep(1)
+            self.write(20, 0)
+        
+        Parameters
+        ----------
+        None
+        """
+
+        print("Se nada foi alterado, valores padrão serão aplicados.")
+        print(f"Valores atuais\nYAW_ACC={self.yaw_acceleration_value:.2f} °/s²\nROLL_ACC={self.roll_acceleration_value:.2f} °/s²\nYAW_MAX_ACC={self.yaw_max_acceleration_value:.2f} °/s²\nROLL_MAX_ACC={self.roll_max_acceleration_value:.2f} °/s²\nYAW_MOVE_VEL={self.yaw_move_velocity_value:.2f} °/s\nROLL_MOVE_VEL={self.roll_move_velocity_value:.2f} °/s\nYAW_MAX_VEL={self.yaw_move_max_velocity_value:.2f} °/s\nROLL_MAX_VEL={self.roll_move_max_velocity_value:.2f} °/s  ")
+        print("Tem certeza que deseja aplicar estas configurações? (s/N)")
+        response = input().strip().lower()
+        if response == '':
+            response = 'n'
+        if response != 's':
+            print("Configurações não aplicadas.")
+            return
+
+        self.set_yaw_acceleration(self.yaw_acceleration_value)
+        self.set_roll_acceleration(self.roll_acceleration_value)
+        self.set_yaw_max_acceleration(self.yaw_max_acceleration_value)
+        self.set_roll_max_acceleration(self.roll_max_acceleration_value)
+        self.set_yaw_move_max_velocity(self.yaw_move_max_velocity_value)
+        self.set_roll_move_max_velocity(self.roll_move_max_velocity_value)
+        self.set_yaw_move_velocity(self.yaw_move_velocity_value)
+        self.set_roll_move_velocity(self.roll_move_velocity_value)
+
+        self.save_configToFile()
+
+    def apply_configToTable(self):
+        """Aplica configurações de movimento da mesa.
+        Obs.: Sem estes comandos: os registradores  são alterados, mas a configuração não é aplicada:
+            self.write(20, 2)
+            time.sleep(1)
+            self.write(20, 0)
+        Parameters
+        ----------  
+        None
+        """
+
+        # YAW 
+        self.write(50, self.yaw_acceleration_value * self.FACTOR)
+        self.write(52, self.yaw_max_acceleration_value * self.FACTOR)
+        self.write(72, self.yaw_move_velocity_value * self.FACTOR)
+        self.write(74, self.yaw_acceleration_value * self.FACTOR)
+        self.write(76, self.yaw_max_acceleration_value * self.FACTOR)
+        self.write(90, self.yaw_move_max_velocity_value * self.FACTOR)
+        self.write(92, self.yaw_max_acceleration_value * self.FACTOR)
+
+        # ROLL
+        self.write(40, self.roll_acceleration_value * self.FACTOR)
+        self.write(42, self.roll_max_acceleration_value * self.FACTOR)
+        self.write(62, self.roll_move_velocity_value * self.FACTOR)
+        self.write(64, self.roll_acceleration_value * self.FACTOR)
+        self.write(66, self.roll_max_acceleration_value * self.FACTOR)
+        self.write(80, self.roll_move_max_velocity_value * self.FACTOR)
+        self.write(82, self.roll_max_acceleration_value * self.FACTOR)
+
+        # Comando de aplicação - específico da programção PLC (sem acesso) do controlador
+        self.write(20, 2)
+        time.sleep(1)
+        self.write(20, 0)
+
+    def save_configToFile(self, CONFIG_FILE=CONFIG_FILE):
+        data = {
+            # ==============================
+            # POSICIONAMENTO (PADRÃO UNIFICADO)
+            # ==============================
+            "velPosAzimute": float(self.yaw_move_velocity_value),
+            "accPosAzimute": float(self.yaw_acceleration_value),
+            "maxVelAzimute": float(self.yaw_move_max_velocity_value),
+            "maxAccAzimute": float(self.yaw_max_acceleration_value),
+
+            "velPosTilt": float(self.roll_move_velocity_value),
+            "accPosTilt": float(self.roll_acceleration_value),
+            "maxVelTilt": float(self.roll_move_max_velocity_value),
+            "maxAccTilt": float(self.roll_max_acceleration_value),
+
+            # ==============================
+            # SIMULADOR (COM FALLBACK)
+            # ==============================
+            "posIniAzimute": float(globals().get("posIniAzimute", 0.0)),
+            "posIniTilt": float(globals().get("posIniTilt", 0.0)),
+
+            "velIniAzimute": float(globals().get("velIniAzimute", 0.0)),
+            "velIniTilt": float(globals().get("velIniTilt", 0.0)),
+
+            "K": float(globals().get("K", 1.0)),
+            "DT": float(globals().get("DT", 0.001))
+        }
+
+        try:
+            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+
+        except Exception as e:
+            print(f"Falha ao salvar config: {e}")
+
     def normalize(self, deg):
         """
         Normaliza ângulo. Evita valores negativos, convertendo para faixa [0, 360°].
@@ -536,7 +662,7 @@ class RotTableWrapper:
         ----------
         vel : float
         """
-        return max(-self.max_vel_yaw, min(self.max_vel_yaw, vel))
+        return max(-self.yaw_move_max_velocity_value, min(self.yaw_move_max_velocity_value, vel))
 
     def clip_vel_roll(self, vel):
         """
@@ -546,7 +672,27 @@ class RotTableWrapper:
         ----------
         vel : float
         """
-        return max(-self.max_vel_roll, min(self.max_vel_roll, vel))
+        return max(-self.roll_move_max_velocity_value, min(self.roll_move_max_velocity_value, vel))
+
+    def clip_acc_yaw(self, acc):
+        """
+        Limita aceleração YAW. Max = 100.0 °/s²
+
+        Parameters
+        ----------
+        acc : float
+        """
+        return max(-self.yaw_max_acceleration_value, min(self.yaw_max_acceleration_value, acc))
+
+    def clip_acc_roll(self, acc):
+        """
+        Limita aceleração ROLL. Max = 100.0 °/s²
+
+        Parameters
+        ----------
+        acc : float
+        """
+        return max(-self.roll_max_acceleration_value, min(self.roll_max_acceleration_value, acc))
 
     # =====================================================
     # PREPARAÇÃO
@@ -567,8 +713,8 @@ class RotTableWrapper:
         addr_enable_roll : int : Acceleration enable ROLL (deve ser 1 para permitir movimento)
         addr_enable_yaw : int : Acceleration enable YAW (deve ser 1 para permitir movimento)
         """
-        self.write(addr_acc, self.max_acc_reg_value)
-        self.write(addr_max_acc, self.max_acc_reg_value)
+        self.write(addr_acc, self.yaw_acceleration_value)
+        self.write(addr_max_acc, self.yaw_max_acceleration_value)
         self.write(addr_enable_roll, 1)
         time.sleep(0.1) # This delay may not be removed or decreased
         self.write(addr_enable_yaw, 1)
@@ -589,8 +735,8 @@ class RotTableWrapper:
         addr_enable_roll : int : Acceleration enable ROLL (deve ser 1 para permitir movimento)
         addr_enable_yaw : int : Acceleration enable YAW (deve ser 1 para permitir movimento)
         """
-        self.write(addr_acc, self.max_acc_reg_value)
-        self.write(addr_max_acc, self.max_acc_reg_value)
+        self.write(addr_acc, self.roll_acceleration_value)
+        self.write(addr_max_acc, self.roll_max_acceleration_value)
         self.write(addr_enable_roll, 1)
         time.sleep(0.1) # This delay may not be removed or decreased
         self.write(addr_enable_yaw, 1)
@@ -633,9 +779,105 @@ class RotTableWrapper:
         """
         self.write(addr_cmd, direction) # trigger
 
-    def set_yaw_velocity(self, vel, addr_vel=56):
+    def set_yaw_move_velocity(self, vel):
         """
-        Define velocidade YAW.
+        Define a variável velocidade de movimento YAW (usada no modo Posicionamento Absoluto).
+
+        Parameters
+        ----------
+        vel : float
+        addr_vel : int
+        """
+        v = int(self.clip_vel_yaw(vel))
+        self.yaw_move_velocity_value = v
+       
+    def set_roll_move_velocity(self, vel):
+        """
+        Define a variável velocidade de movimento ROLL (usada no modo Posicionamento Absoluto).
+
+        Parameters
+        ----------
+        vel : float
+        addr_vel : int
+        """
+        v = int(self.clip_vel_roll(vel))
+        self.roll_move_velocity_value = v
+    
+    def set_yaw_move_max_velocity(self, vel):
+        """
+        Define variável velocidade máxima de movimento YAW (usada no modo Posicionamento Absoluto).
+
+        Parameters
+        ----------
+        vel : float
+        addr_max_vel : int
+        """
+        v = int(self.clip_vel_yaw(vel))
+        self.yaw_move_max_velocity_value = v
+    
+    def set_roll_move_max_velocity(self, vel):
+        """
+        Define a variável velocidade máxima de movimento ROLL (usada no modo Posicionamento Absoluto).
+
+        Parameters
+        ----------
+        vel : float
+        addr_max_vel : int
+        """
+        v = int(self.clip_vel_roll(vel))
+        self.roll_move_max_velocity_value = v
+
+    def set_yaw_acceleration(self, acc):
+        """
+        Define a variável aceleração YAW.
+
+        Parameters
+        ----------
+        acc : float
+        addr_acc : int
+        """
+        a = int(self.clip_acc_yaw(acc))
+        self.yaw_acceleration_value = a
+        
+    def set_roll_acceleration(self, acc):
+        """
+        Define a variável aceleração ROLL.
+
+        Parameters
+        ----------
+        acc : float
+        addr_acc : int
+        """
+        a = int(self.clip_acc_roll(acc))  
+        self.roll_acceleration_value = a
+    
+    def set_yaw_max_acceleration(self, acc):
+        """
+        Define a variável aceleração máxima YAW.
+
+        Parameters
+        ----------
+        acc : float
+        addr_max_acc : int
+        """
+        a = int(self.clip_acc_yaw(acc))
+        self.yaw_max_acceleration_value = a
+       
+    def set_roll_max_acceleration(self, acc):
+        """
+        Define a variável aceleração máxima ROLL.
+
+        Parameters
+        ----------
+        acc : float
+        addr_max_acc : int
+        """
+        a = int(self.clip_acc_roll(acc))
+        self.roll_max_acceleration_value = a
+
+    def set_yaw_velocity(self, vel):
+        """
+        Define a variável velocidade YAW.
 
         Parameters
         ----------
@@ -646,13 +888,12 @@ class RotTableWrapper:
         -------
         int : Velocidade aplicada (após clipping e escala)
         """
-        v = int(self.clip_vel_yaw(vel) * 100)
-        self.write_dword(addr_vel, abs(v))
-        return v
+        v = int(self.clip_vel_yaw(vel))
+        self.yaw_move_velocity_value = v
 
-    def set_roll_velocity(self, vel, addr_vel=46):
+    def set_roll_velocity(self, vel):
         """
-        Define velocidade ROLL.
+        Define a variável velocidade ROLL.
 
         Parameters
         ----------
@@ -664,13 +905,12 @@ class RotTableWrapper:
         int : Velocidade aplicada (após clipping e escala)
 
         """
-        v = int(self.clip_vel_roll(vel) * 100)
-        self.write_dword(addr_vel, abs(v))
-        return v
+        v = int(self.clip_vel_roll(vel))
+        self.roll_move_velocity_value = v
 
     def set_yaw_position(self, angle, addr_pos=70):
         """
-        Define posição YAW.
+        Define a variável posição YAW.
 
         Parameters
         ----------
@@ -681,7 +921,7 @@ class RotTableWrapper:
 
     def set_roll_position(self, angle, addr_pos=60):
         """
-        Define posição ROLL.
+        Define a variável posição ROLL.
 
         Parameters
         ----------
@@ -1040,7 +1280,7 @@ class RotTableWrapper:
         vel_yaw = self.get_vel_yaw(addr_yaw)
         vel_roll = self.get_vel_roll(addr_roll)
         return vel_yaw, vel_roll
-            
+                    
 ~~~
 
 ---
