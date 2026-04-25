@@ -1,0 +1,126 @@
+<svg width="1400" height="1000" xmlns="http://www.w3.org/2000/svg">
+
+  <style>
+    .box {
+      fill: #1e1e1e;
+      stroke: #00d4ff;
+      stroke-width: 2;
+      rx: 10;
+    }
+    .text {
+      fill: #ffffff;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+    .title {
+      font-size: 20px;
+      fill: #00d4ff;
+      font-weight: bold;
+      text-anchor: middle;
+    }
+    .arrow {
+      stroke: #ffffff;
+      stroke-width: 2;
+      marker-end: url(#arrowhead);
+    }
+    .sub {
+      font-size: 12px;
+      fill: #aaaaaa;
+    }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ffffff"></polygon>
+    </marker>
+  </defs>
+
+  <!-- TITLE -->
+  <text x="700" y="40" class="title">
+    RotTableWrapper - Operações, Registradores e Timing
+  </text>
+
+  <!-- ========================= -->
+  <!-- MOVE FLOW -->
+  <!-- ========================= -->
+
+  <rect x="100" y="100" width="350" height="90" class="box"></rect>
+  <text x="275" y="125" class="text">MOVE YAW / ROLL</text>
+  <text x="275" y="150" class="text">prepare → mode → write → trigger</text>
+
+  <rect x="100" y="220" width="350" height="120" class="box"></rect>
+  <text x="275" y="250" class="text">REGISTRADORES MOVE</text>
+  <text x="275" y="275" class="text">70 / 60 → position (DWORD)</text>
+  <text x="275" y="295" class="text">24 / 22 → mode</text>
+  <text x="275" y="315" class="text">28 / 26 → trigger</text>
+
+  <rect x="100" y="370" width="350" height="100" class="box"></rect>
+  <text x="275" y="405" class="text">TIMING CRÍTICO</text>
+  <text x="275" y="430" class="text">delay 0.1s (prepare)</text>
+  <text x="275" y="450" class="text">delay 0.02s (trigger)</text>
+
+  <!-- ========================= -->
+  <!-- JOG FLOW -->
+  <!-- ========================= -->
+
+  <rect x="520" y="100" width="350" height="90" class="box"></rect>
+  <text x="695" y="125" class="text">JOG CONTÍNUO</text>
+  <text x="695" y="150" class="text">prepare → velocity → direction</text>
+
+  <rect x="520" y="220" width="350" height="120" class="box"></rect>
+  <text x="695" y="250" class="text">REGISTRADORES JOG</text>
+  <text x="695" y="275" class="text">56 / 46 → velocity (DWORD)</text>
+  <text x="695" y="295" class="text">28 / 26 → direction</text>
+  <text x="695" y="315" class="text">0 / 1 / 2 → stop/+/−</text>
+
+  <rect x="520" y="370" width="350" height="100" class="box"></rect>
+  <text x="695" y="405" class="text">COMPORTAMENTO</text>
+  <text x="695" y="430" class="text">fluxo contínuo sem trigger final</text>
+  <text x="695" y="450" class="text">velocity * 100 scale</text>
+
+  <!-- ========================= -->
+  <!-- STOP -->
+  <!-- ========================= -->
+
+  <rect x="940" y="100" width="350" height="90" class="box"></rect>
+  <text x="1115" y="130" class="text">STOP</text>
+  <text x="1115" y="155" class="text">write direction = 0</text>
+
+  <rect x="940" y="220" width="350" height="120" class="box"></rect>
+  <text x="1115" y="250" class="text">REGISTRADORES STOP</text>
+  <text x="1115" y="275" class="text">28 / 26 → 0 (yaw/roll)</text>
+  <text x="1115" y="295" class="text">sem write_dword</text>
+  <text x="1115" y="315" class="text">estado neutro</text>
+
+  <!-- ========================= -->
+  <!-- FEEDBACK -->
+  <!-- ========================= -->
+
+  <rect x="520" y="550" width="770" height="140" class="box"></rect>
+  <text x="905" y="580" class="text">FEEDBACK (READ ONLY)</text>
+  <text x="905" y="610" class="text">read_input → 2 registradores (16-bit)</text>
+  <text x="905" y="635" class="text">raw = (MSB &lt;&lt; 16) | LSB</text>
+  <text x="905" y="660" class="text">scale: / 1_000_000 (pos/vel em float)</text>
+
+  <!-- ========================= -->
+  <!-- TIMING SUMMARY -->
+  <!-- ========================= -->
+
+  <rect x="100" y="550" width="350" height="140" class="box"></rect>
+  <text x="275" y="580" class="text">TIMING GLOBAL</text>
+  <text x="275" y="610" class="text">prepare → 100ms delay obrigatório</text>
+  <text x="275" y="635" class="text">trigger → 20ms delay crítico</text>
+  <text x="275" y="660" class="text">PLC sync dependente de timing</text>
+
+  <!-- ARROWS -->
+  <line x1="275" y1="190" x2="275" y2="220" class="arrow"></line>
+  <line x1="275" y1="340" x2="275" y2="370" class="arrow"></line>
+
+  <line x1="695" y1="190" x2="695" y2="220" class="arrow"></line>
+  <line x1="695" y1="340" x2="695" y2="370" class="arrow"></line>
+
+  <line x1="1115" y1="190" x2="1115" y2="220" class="arrow"></line>
+
+</svg>

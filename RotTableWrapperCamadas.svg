@@ -1,0 +1,116 @@
+<svg width="1300" height="900" xmlns="http://www.w3.org/2000/svg">
+
+  <style>
+    .box {
+      fill: #1e1e1e;
+      stroke: #00d4ff;
+      stroke-width: 2;
+      rx: 10;
+    }
+    .text {
+      fill: #ffffff;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+    .title {
+      font-size: 20px;
+      fill: #00d4ff;
+      font-weight: bold;
+    }
+    .arrow {
+      stroke: #ffffff;
+      stroke-width: 2;
+      marker-end: url(#arrowhead);
+    }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ffffff"></polygon>
+    </marker>
+  </defs>
+
+  <!-- TITLE -->
+  <text x="650" y="40" class="title">
+    RotTableWrapper - Arquitetura em Camadas
+  </text>
+
+  <!-- USER -->
+  <rect x="500" y="80" width="300" height="70" class="box"></rect>
+  <text x="650" y="115" class="text">
+    USER API
+  </text>
+  <text x="650" y="135" class="text">
+    move_* / jog_* / stop_* / get_*
+  </text>
+
+  <!-- SEQUENCE -->
+  <rect x="450" y="200" width="400" height="90" class="box"></rect>
+  <text x="650" y="235" class="text">
+    SEQUÊNCIA DE COMANDO
+  </text>
+  <text x="650" y="255" class="text">
+    prepare → mode → write → trigger
+  </text>
+
+  <!-- PRIMITIVES -->
+  <rect x="450" y="340" width="400" height="110" class="box"></rect>
+  <text x="650" y="370" class="text">
+    PRIMITIVOS
+  </text>
+  <text x="650" y="395" class="text">
+    set_* / normalize()
+  </text>
+  <text x="650" y="415" class="text">
+    clip_* / conversões
+  </text>
+
+  <!-- CORE -->
+  <rect x="450" y="500" width="400" height="110" class="box"></rect>
+  <text x="650" y="530" class="text">
+    CORE MODBUS
+  </text>
+  <text x="650" y="555" class="text">
+    write()
+  </text>
+  <text x="650" y="575" class="text">
+    write_dword()
+  </text>
+  <text x="650" y="595" class="text">
+    read_input()
+  </text>
+
+  <!-- HARDWARE -->
+  <rect x="450" y="660" width="400" height="90" class="box"></rect>
+  <text x="650" y="695" class="text">
+    HARDWARE
+  </text>
+  <text x="650" y="715" class="text">
+    PLC / Mesa Inercial
+  </text>
+
+  <!-- FEEDBACK -->
+  <rect x="900" y="500" width="300" height="110" class="box"></rect>
+  <text x="1050" y="530" class="text">
+    FEEDBACK
+  </text>
+  <text x="1050" y="555" class="text">
+    read → to_int32()
+  </text>
+  <text x="1050" y="575" class="text">
+    escala → return
+  </text>
+
+  <!-- ARROWS -->
+  <line x1="650" y1="150" x2="650" y2="200" class="arrow"></line>
+  <line x1="650" y1="290" x2="650" y2="340" class="arrow"></line>
+  <line x1="650" y1="450" x2="650" y2="500" class="arrow"></line>
+  <line x1="650" y1="610" x2="650" y2="660" class="arrow"></line>
+
+  <!-- FEEDBACK FLOW -->
+  <line x1="850" y1="550" x2="900" y2="550" class="arrow"></line>
+  <line x1="900" y1="550" x2="850" y2="550" class="arrow"></line>
+
+</svg>

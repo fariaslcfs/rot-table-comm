@@ -87,79 +87,95 @@ rot = RotTableWrapper("127.0.0.1", 5020)
 
 rot.move_yaw(45)
 
-pos = rot.get_pos_yaw()
+rot.get_pos_yaw()
 
 rot.move_roll(30)
 
-pos = rot.get_pos_roll()
+rot.get_pos_roll()
 
 rot.move_yaw(0)
 
 rot.move_roll(0)
 
-pos_yaw = rot.get_pos_yaw()
+rot.get_pos_yaw()
 
-pos_roll = rot.get_pos_roll()
+rot.get_pos_roll()
 
 rot.jog_yaw(20)
 
-vel = rot.get_vel_yaw()
+rot.get_vel_yaw()
 
 rot.stop_yaw()
 
-vel = rot.get_vel_yaw()
+rot.get_vel_yaw()
 
 rot.jog_roll(-15)
 
-vel = rot.get_vel_roll()
+rot.get_vel_roll()
 
 rot.stop_roll()
 
-vel = rot.get_vel_roll()
+rot.get_vel_roll()
 
 rot.jog_yaw(-30)
 
-vel = rot.get_vel_yaw()
+rot.get_vel_yaw()
 
 rot.jog_roll(0)
 
 rot.jog_roll(20)
 
-vel = rot.get_vel_roll()
+rot.get_vel_roll()
 
 rot.stop_all()
 
-vel_yaw = rot.get_vel_yaw()
+rot.get_vel_yaw()
 
-vel_roll = rot.get_vel_roll()
+rot.get_vel_roll()
 
 rot.jog_all(10)
 
-vel_yaw = rot.get_vel_yaw()
+rot.get_vel_yaw()
 
-vel_roll = rot.get_vel_roll()
+rot.get_vel_roll()
 
 rot.stop_all()
 
-vel_yaw = rot.get_vel_yaw()
+rot.get_vel_yaw()
 
-vel_roll = rot.get_vel_roll()
+rot.get_vel_roll()
 
 rot.jog_all(90.0)
 
-vel_all = rot.get_vel_all()
+rot.get_vel_all()
 
 rot.stop_all()
 
-vel_yaw = rot.get_vel_yaw()
+rot.get_vel_yaw()
 
-vel_roll = rot.get_vel_roll()
+rot.get_vel_roll()
 
 rot.move_all(0)
 
-pos_yaw = rot.get_pos_yaw()
+rot.get_pos_yaw()
 
-pos_roll = rot.get_pos_roll()
+rot.get_pos_roll()
+
+rot.jog_all(10)
+
+rot.stop_all()
+
+rot.mov_all(0)
+
+rot.emergency_stop()
+
+rot.emergency_reset()
+
+rot.move_all(180)
+
+rot.move_all(0)
+
+rot.close()
 
 ~~~
 

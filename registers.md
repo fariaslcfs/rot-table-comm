@@ -25,3 +25,16 @@
 | 82 | MaxAccRoll | Roll max acceleration |
 | 90 | MaxVelYaw | Yaw max velocity |
 | 92 | MaxAccYaw | Yaw max acceleration |
+
+## 🔹 Registers Map
+| Addr | Type | Axis | Function  | Scale |
+| ---- | ---- | ---- | --------- | ----- |
+| 20   | CMD  | SYS  | EMERGENCY | bit   |
+| 22   | CTRL | ROLL | ENABLE    | bool  |
+| 24   | CTRL | YAW  | ENABLE    | bool  |
+| 26   | CMD  | ROLL | DIRECTION | enum  |
+| 28   | CMD  | YAW  | DIRECTION | enum  |
+| 46   | DINT | ROLL | VELOCITY  | x100  |
+| 56   | DINT | YAW  | VELOCITY  | x100  |
+| 60   | DINT | ROLL | POSITION  | /1e6  |
+| 70   | DINT | YAW  | POSITION  | /1e6  |
