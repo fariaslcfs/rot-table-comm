@@ -144,7 +144,8 @@ class RotTableWrapper:
     =============================================================================
 
     DESCRIÇÃO GERAL
-    ------------------------------------------------------------------------------------
+    -------------------        print("RESET executado")
+-----------------------------------------------------------------
     Esta classe encapsula (wrapper) o controle de uma mesa inercial de dois eixos (YAW e
     ROLL) através do protocolo Modbus TCP.
 
@@ -153,7 +154,8 @@ class RotTableWrapper:
 
     A interface implementa três camadas:
 
-        NÍVEL 1 — CORE MODBUS
+        NÍVEL 1 — CORE         print("RESET executado")
+MODBUS
             - write
             - write_dword
             - read_input
@@ -1162,8 +1164,6 @@ class RotTableWrapper:
             time.sleep(1)
             self.write(24, 0)
             self.write(22, 0)
-        print("RESET executado")
-
                     
 ~~~
 

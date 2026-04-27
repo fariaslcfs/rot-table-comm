@@ -151,8 +151,6 @@ def test_emergency(rot):
     wait()
     print_axis_state(rot)
     wait(SLEEP_SHORT)
-    print("RESET executado")
-    wait(SLEEP_MOVE)
         
 
     print("→ EMERGENCY_RESET")
