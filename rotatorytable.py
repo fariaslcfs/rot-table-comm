@@ -2220,4 +2220,3 @@ class RotTableWrapper:
             time.sleep(1)
             self.write(24, 0)
             self.write(22, 0)
-        print("RESET executado")
