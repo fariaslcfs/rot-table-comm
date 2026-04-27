@@ -1602,7 +1602,7 @@ class RotTableWrapper:
         - Deve ser tratado externamente.
         """
         self._ensure()
-        return self.client.read_input_registers(addr, count)
+        return self.client.read_input_registers(addr, count=count)
 
     def read_dword(self, addr):
         """
@@ -1816,8 +1816,8 @@ class RotTableWrapper:
             delay 0.1
         """
 
-        self.write(40, self.yaw_acceleration_value)
-        self.write(42, self.yaw_max_acceleration_value)
+        self.write(40, int(self.yaw_acceleration_value * self.FACTOR))
+        self.write(42, int(self.yaw_max_acceleration_value * self.FACTOR))
 
         self.write(22, 1)
         time.sleep(0.1)
@@ -1832,8 +1832,8 @@ class RotTableWrapper:
         Mesma lógica de dependência do YAW.
         """
 
-        self.write(50, self.roll_acceleration_value)
-        self.write(52, self.roll_max_acceleration_value)
+        self.write(50, int(self.roll_acceleration_value * self.FACTOR))
+        self.write(52, int(self.roll_max_acceleration_value * self.FACTOR))
 
         self.write(22, 1)
         time.sleep(0.1)
@@ -1871,10 +1871,8 @@ class RotTableWrapper:
             56 → velocidade
             28 → direção e trigger (1=positivo, 2=negativo, 0=stop)
         """
-
         self.prepare_yaw_motion()
         self.write(56, abs(int(vel * self.FACTOR)))
-
         self.write(28, 1 if vel > 0 else 2 if vel < 0 else 0)
 
     def jog_roll(self, vel):
@@ -1895,7 +1893,6 @@ class RotTableWrapper:
         """
         self.prepare_roll_motion()
         self.write(46, abs(int(vel * self.FACTOR)))
-
         self.write(26, 1 if vel > 0 else 2 if vel < 0 else 0)
 
     def jog_all(self, vel):
@@ -1994,7 +1991,7 @@ class RotTableWrapper:
 
     # =====================================================
     # STOP
-    # =====================================================
+    # ======================i===============================
 
     def stop_yaw(self):
         """
@@ -2203,16 +2200,24 @@ class RotTableWrapper:
             write(20, 4) → delay → write(20, 0)
         """
         self.write(20, 4)
-        time.sleep(0.2)
+        time.sleep(1)
         self.write(20, 0)
+        time.sleep(1)
 
     def emergency_reset(self):
         """
         Reseta estado de emergência do sistema.
 
         Sequência:
+            Deve ser usado dentro do loop de tentativas
+            delay deve ser de 1 segundo.
             write(20, 1) → delay → write(20, 0)
         """
-        self.write(20, 1)
-        time.sleep(0.2)
-        self.write(20, 0)
+        for _ in range(2):
+            self.write(20, 1)
+            time.sleep(1)
+            self.write(20, 0)
+            time.sleep(1)
+            self.write(24, 0)
+            self.write(22, 0)
+        print("RESET executado")

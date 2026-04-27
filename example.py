@@ -12,8 +12,8 @@ from time import sleep
 # CONFIG
 # =========================================================
 
-SERVER_TEST = "127.0.0.1"
-MODBUS_PORT_TEST = 5020
+SERVER_TEST = "192.168.1.1"
+MODBUS_PORT_TEST = 502
 
 SLEEP_MOVE = 5
 SLEEP_SHORT = 2
@@ -139,7 +139,6 @@ def test_homing(rot):
     print_axis_state(rot)
     wait(SLEEP_SHORT)
 
-
 def test_emergency(rot):
     print_title("TESTE: EMERGÊNCIA")
 
@@ -152,20 +151,29 @@ def test_emergency(rot):
     wait()
     print_axis_state(rot)
     wait(SLEEP_SHORT)
+    print("RESET executado")
+    wait(SLEEP_MOVE)
+        
 
-    print("→ RESET")
+    print("→ EMERGENCY_RESET")
     rot.emergency_reset()
     wait()
 
-    print("→ Teste pós-reset (jog 10°/s)")
+    print("→ Teste pós-reset (jog all 10°/s)")
     rot.jog_all(10)
     wait()
     print_axis_state(rot)
-    wait(SLEEP_SHORT)
+    wait()
 
     print("→ STOP ALL")
     rot.stop_all()
     wait()
+    print_axis_state(rot)
+    wait(SLEEP_SHORT)
+
+    print("→ HOMING FINAL")
+    rot.move_all(0)
+    wait(8)
     print_axis_state(rot)
     wait(SLEEP_SHORT)
 
