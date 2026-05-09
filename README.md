@@ -40,7 +40,7 @@ Ela encapsula:
 ### 3.1 Registradores INT32 (2x16 bits)
 
 O controlador da mesa utiliza registradores de 16 bits.  
-Valores maiores (posição/velocidade) são armazenados em 32 bits:
+Valores maiores (posição) são armazenados em 32 bits:
 
 - valor (32 bits) = HIGH << 16 | LOW  (modbus é um protocolo de 16 bits)
 
@@ -51,7 +51,11 @@ Valores maiores (posição/velocidade) são armazenados em 32 bits:
 | Parâmetro  | Escala |
 |------------|--------|
 | Posição    | ×1000  |
-| Velocidade | ×100   |
+| Velocidade | ×100   | 
+
+Obs.:
+Para a velocidade, 16 bits é suficiente porque o maior valor de velocidade será 500 °/s (500 x 100) que é 
+menor que 65535
 
 ---
 
@@ -100,8 +104,8 @@ normalize(angle):
 | 42   | Max Acc Roll |
 | 50   | Acc Yaw |
 | 52   | Max Acc Yaw |
-| 46-47| Vel Roll |        * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
-| 56-57| Vel Yaw |     * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador |
+| 46-47| Vel Roll |    * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador (46) |
+| 56-57| Vel Yaw |     * O valor máximo de velocidade não ultrapassa 65535 (16 bits) usando somente 1 registrador (56) |
 | 60-61| Target Roll |     * Para o valor do target (posição angular de roll), 2 registradores de 16 bits são usados | 
 | 70-71| Target Yaw |  * Para o valor do target (posição angular de yaw), 2 registradores de 16 bits são usados | 
 | 80   | MaxVelRoll |      * Roll max velocity |
